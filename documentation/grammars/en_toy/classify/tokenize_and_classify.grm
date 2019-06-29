@@ -1,4 +1,5 @@
 import 'cardinal.grm' as c;
+import 'ordinal.grm' as o;
 import 'date.grm' as d;
 import 'measure.grm' as M;
 import 'money.grm' as m;
@@ -6,12 +7,13 @@ import 'punctuation.grm' as p;
 import 'time.grm' as t;
 import '../util.grm' as u;
 import 'word.grm' as w;
+import 'decimal.grm' as D;
 
-types = c.CARDINAL | d.DATE | M.MEASURE | m.MONEY | w.WORD | t.TIME;
+types = D.DECIMAL | o.ORDINAL | (c.CARDINAL <2.0>) | d.DATE | M.MEASURE | m.MONEY | (w.WORD <3.0>) | t.TIME;
 
-token = u.I["tokens { "] types u.I[" }"];
+token_plus_punct = u.I["tokens { "] types u.I[" }"];
 
-token_plus_punct = (p.PUNCT u.I[" "])* token (u.I[" "] p.PUNCT)*;
+# token_plus_punct = (p.PUNCT u.I[" "])* token (u.I[" "] p.PUNCT)*;
 
 # Collection of all possible semiotic classes, including ordinary words.
 

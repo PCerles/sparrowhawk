@@ -33,11 +33,21 @@ year = ("1" | "2") d{3};
 # Etc.
 
 y = 
-    u.I["date { "]
-    u.I["year: " q]
-    year
-    u.I[q]
-    u.I[" }"];
+  u.I["date { "]
+  u.I["year: " q]
+  year
+  u.I[q]
+  u.I[" }"];
+
+yp = 
+  u.I["date { "]
+  u.I["year: " q]
+  year
+  u.I[q]
+  u.D["s"]
+  u.I[" style: "]
+  u.I["1"] 
+  u.I[" }"];
 
 mdy =
   u.I["date { "]
@@ -69,4 +79,4 @@ dmy =
   u.I[" preserve_order: true"]
   u.I[" }"];
 
-export DATE = Optimize[mdy | dmy | (y <1.0>)];
+export DATE = Optimize[mdy | dmy | (y <1.0>) | yp];
