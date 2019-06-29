@@ -32,6 +32,13 @@ year = ("1" | "2") d{3};
 #
 # Etc.
 
+y = 
+    u.I["date { "]
+    u.I["year: " q]
+    year
+    u.I[q]
+    u.I[" }"];
+
 mdy =
   u.I["date { "]
   u.I["month: " q]
@@ -62,4 +69,4 @@ dmy =
   u.I[" preserve_order: true"]
   u.I[" }"];
 
-export DATE = Optimize[mdy | dmy];
+export DATE = Optimize[mdy | dmy | (y <1.0>)];

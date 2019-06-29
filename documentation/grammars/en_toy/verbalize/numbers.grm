@@ -14,9 +14,14 @@ d = b.kDigit;
 
 digit = d @ cardinal;
 
+possible_endings = ("st" : "") |
+                   ("th" : "") |
+                   ("nd" : "") |
+                   ("rd" : "");
+
 export CARDINAL = cardinal;
 
-export ORDINAL = ordinal;
+export ORDINAL = ordinal possible_endings;
 
 export DIGITS = Optimize[digit (u.I[" "] digit)*];
 
