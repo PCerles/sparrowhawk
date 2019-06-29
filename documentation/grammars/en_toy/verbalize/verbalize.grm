@@ -4,11 +4,12 @@ import 'money.grm' as m;
 import 'numbers.grm' as n;
 import 'time.grm' as t;
 import 'verbatim.grm' as v;
+import 'decimal.grm' as dc;
 
 # Combines all of the semiotic classes together.
 
 export ALL = Optimize[
-  d.DATE | M.MEASURE | m.MONEY | n.CARDINAL_MARKUP | t.TIME | v.VERBATIM];
+  d.DATE | M.MEASURE | m.MONEY | n.CARDINAL_MARKUP | t.TIME | v.VERBATIM | dc.DECIMAL];
 
 # Exports the REDUP from money.
 export REDUP = m.REDUP;

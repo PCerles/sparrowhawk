@@ -50,8 +50,15 @@ void NormalizeInput(const string& input,
   for (const auto& sentence : sentences) {
     string output;
     normalizer->Normalize(sentence, &output);
-    std::cout << output << std::endl;
+    std::cout << sentence << "|" << output << std::endl;
   }
+}
+
+void NormalizeInputSingleWord(const string& input,
+                    speech::sparrowhawk::Normalizer *normalizer) {
+    string output;
+    normalizer->Normalize(input, &output);
+    std::cout << input << "|" << output << std::endl;
 }
 
 int main(int argc, char** argv) {
@@ -68,10 +75,10 @@ int main(int argc, char** argv) {
       if (!input.empty()) input += " ";
       input += line;
     }
-    NormalizeInput(input, normalizer.get());
+    NormalizeInputSingleWord(input, normalizer.get());
   } else {
     while (std::getline(std::cin, input)) {
-      NormalizeInput(input, normalizer.get());
+      NormalizeInputSingleWord(input, normalizer.get());
     }
   }
   return 0;

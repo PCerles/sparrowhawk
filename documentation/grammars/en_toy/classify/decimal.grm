@@ -1,0 +1,20 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+
+d = b.kDigit;
+q = u.q;
+
+
+decimal =
+    u.I["decimal { "]
+    u.I["integer_part: " q]
+    d+
+    u.I[q]
+    u.D["."]
+    u.I[" fractional_part: " q]
+    d+
+    u.I[q]
+    u.I["}"]
+;
+
+export DECIMAL = Optimize[decimal];

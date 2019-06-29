@@ -1,0 +1,28 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+import 'numbers.grm' as n;
+
+q = u.q;
+
+# Used to allow for different numbers of spaces coming out of the serializer.
+s = u.s;
+
+d = b.kDigit;
+
+
+# Protobuf: decimal { integer_part: "30" fractional_part: "056" }
+
+
+decimal_all =
+    u.D["decimal" s "{" s]
+    u.D["integer_part:" s q]
+    n.CARDINAL
+    u.D[q s]
+    u.I[" point "]
+    u.D["fractional_part:" s q]
+    n.DIGITS
+    u.D[q s "}"]
+;
+
+
+export DECIMAL = Optimize[decimal_all];
