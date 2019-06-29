@@ -7,21 +7,15 @@ import '../util.grm' as u;
 # Kyle Gorman and Richard Sproat. "Minimally supervised models for number
 # normalization." Transactions of the Association for Computational Linguistics. 2016.
 cardinal = LoadFst['CARDINAL_NUMBER_NAME'];
-
 ordinal = LoadFst['ORDINAL_NUMBER_NAME'];
 
 d = b.kDigit;
 
 digit = d @ cardinal;
 
-possible_endings = ("st" : "") |
-                   ("th" : "") |
-                   ("nd" : "") |
-                   ("rd" : "");
-
 export CARDINAL = cardinal;
 
-export ORDINAL = ordinal possible_endings;
+export ORDINAL = ordinal;
 
 export DIGITS = Optimize[digit (u.I[" "] digit)*];
 
@@ -40,4 +34,13 @@ cardinal_markup =
   u.D[s "}"]
 ;
 
+ordinal_markup =
+  u.D["ordinal" s "{" s]
+  u.D["integer:" s q]
+  ordinal
+  u.D[q]
+  u.D[s "}"]
+;
+
 export CARDINAL_MARKUP = Optimize[cardinal_markup];
+export ORDINAL_MARKUP = Optimize[ordinal_markup];
