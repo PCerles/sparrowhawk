@@ -5,11 +5,19 @@ import 'numbers.grm' as n;
 import 'time.grm' as t;
 import 'verbatim.grm' as v;
 import 'decimal.grm' as D;
+import 'telephone.grm' as T;
+import '../util.grm' as u;
 
 # Combines all of the semiotic classes together.
 
 export ALL = Optimize[
- D.DECIMAL |  (d.DATE <-2.0>)| M.MEASURE | m.MONEY | n.CARDINAL_MARKUP | n.ORDINAL_MARKUP | t.TIME | v.VERBATIM];
+ T.TELEPHONE | D.DECIMAL |  (d.DATE <-2.0>)| M.MEASURE | m.MONEY | n.CARDINAL_MARKUP | n.ORDINAL_MARKUP | t.TIME | v.VERBATIM];
 
+rewrite_brackets = ("{" : "{ ") | ("}": " }");
+
+export INVERSE = u.I["tokens {"] (Optimize[Invert[ALL]]) u.I[" }"];
 # Exports the REDUP from money.
 export REDUP = m.REDUP;
+
+export REDUP_INVERSE = Optimize[Invert[REDUP]];
+export REWRITE_BRACKETS = rewrite_brackets;

@@ -1,0 +1,38 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+import 'numbers.grm' as n;
+
+# quotation mark
+q = u.q;
+
+# Used to allow for different numbers of spaces coming out of the serializer.
+s = u.s;
+
+insspace = "" : " ";
+zero  = "0" : "zero";
+
+units =   ("1" : "one")
+        | ("2" : "two")
+        | ("3" : "three")
+        | ("4" : "four")
+        | ("5" : "five")
+        | ("6" : "six")
+        | ("7" : "seven")
+        | ("8" : "eight")
+        | ("9" : "nine")
+;
+
+#TODO 1-800
+read_digit_by_digit = (units | zero) (insspace (units | zero))* ;
+
+# Verbalization for MDY
+n =
+  u.D["telephone" s "{" s]
+  u.D["number_part:" s q]
+  read_digit_by_digit
+  u.D[q s]
+  u.D["}"]
+;
+
+
+export TELEPHONE = Optimize[n];
