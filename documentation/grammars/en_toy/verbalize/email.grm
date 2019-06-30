@@ -1,0 +1,58 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+import 'numbers.grm' as n;
+
+q = u.q;
+s = u.s;
+d = b.kDigit;
+
+
+# Protobuf: email { id { text: "john.smith" } domain { text: "gmail" } tld { text: "com" } }
+
+
+sigma_star = b.kBytes*;
+separate_punct1 = CDRewrite["" : " ", "", b.kPunct, sigma_star];
+separate_punct2 = CDRewrite["" : " ", b.kPunct, "", sigma_star];
+separate_punct = separate_punct1 @ separate_punct2;
+
+
+# TODO
+punct = (u.I[" "] ( 
+        ("." : "dot") |
+        ("-" : "dash") |
+        ("_" : "underscore") | 
+        ("&" : "and") 
+    ) u.I[" "]) | (b.kPunct : " " <2.0>)
+;
+
+words_and_single_num = (
+    (u.I[" "] (d @ n.CARDINAL))* | 
+    b.kAlpha*
+);
+
+user_id = words_and_single_num* (punct* words_and_single_num*)*;
+
+# TODO: figure out fields
+email = 
+    u.D["date" s "{" s]
+
+    u.D["day:" s q]
+    user_id
+    u.D[q s]
+
+    u.I[" at "]
+
+    u.D["month:" s q]
+    words_and_single_num*
+    u.D[q s]
+
+    u.I[" dot "]
+
+    u.D["year:" s q]
+    b.kAlpha* 
+   
+    u.D[q s "}"]
+; 
+
+
+export EMAIL = Optimize[email];

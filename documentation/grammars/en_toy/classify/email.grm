@@ -1,0 +1,51 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+
+d = b.kDigit;
+q = u.q;
+
+
+symbols = "!" | "#" | "$" | "%" | "&" | "'" | "*" | "+" | "-" | "/" | "=" | "?" | "^" | "_" | "`" | "{" | "|" | "}" | "~";
+
+
+#email_id_digits = b.kAlnum | symbols;
+
+email_id_digits = b.kGraph - "@";
+domain_digits = b.kGraph - ".";
+
+#email =
+#    u.I["decimal { "]
+#    u.I["decimal { "]
+#    u.I["text: " q]
+#    email_id_digits+
+#    u.I[q " } "]
+#    u.D["@"]
+#    u.I["decimal { "]
+#    u.I["text: " q]
+#    domain_digits+
+#    u.I[q " } "]
+#    u.D["."]
+#    u.I["decimal { "]
+#    u.I["text: " q]
+#    b.kAlpha+
+#    u.I[q " } }"]
+#;
+#
+
+# TODO: figure out fields
+email =
+    u.I["date { "]
+    u.I["day: " q]
+    email_id_digits+
+    u.I[q]
+    u.D["@"]
+    u.I["month: " q]
+    domain_digits+
+    u.I[q]
+    u.D["."]
+    u.I["year: " q]
+    b.kAlpha+
+    u.I[q "}"]
+;
+
+export EMAIL = Optimize[email];
