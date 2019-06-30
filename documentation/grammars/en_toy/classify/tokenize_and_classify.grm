@@ -7,8 +7,9 @@ import 'time.grm' as t;
 import '../util.grm' as u;
 import 'word.grm' as w;
 import 'decimal.grm' as dc;
+import 'email.grm' as em;
 
-types = c.CARDINAL | d.DATE | M.MEASURE | m.MONEY | w.WORD | t.TIME | dc.DECIMAL;
+types = c.CARDINAL | d.DATE | M.MEASURE | m.MONEY | w.WORD | t.TIME | dc.DECIMAL | em.EMAIL;
 
 token = u.I["tokens { "] types u.I[" }"];
 
