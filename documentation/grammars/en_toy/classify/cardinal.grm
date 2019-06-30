@@ -7,11 +7,11 @@ q = u.q;
 # 300 -> cardinal { integer: "300"}
 
 cardinal =
-  u.I["cardinal { "]
-  u.I["integer: " q]
+  u.I["cardinal{"]
+  u.I["integer:"q]
   d+
   u.I[q]
-  u.I[" }"]
+  u.I["}"]
 ;
 
 export CARDINAL = Optimize[cardinal];
