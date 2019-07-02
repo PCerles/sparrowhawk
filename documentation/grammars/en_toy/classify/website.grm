@@ -1,0 +1,55 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+
+d = b.kDigit;
+q = u.q;
+
+domain_chars = b.kGraph - (":" | "/" | "?" | "#");
+port_chars = b.kGraph - ("/" | "?" | "#");
+path_chars = b.kGraph - ("?" | "#");
+query_string_chars = b.kGraph - "#";
+fragment_id_chars = b.kGraph;
+
+# TODO: figure out fields
+website =
+    u.I["electronic { "]
+
+   (u.I[" protocol: " q]
+    b.kGraph* u.D["://"]
+    u.I[q])?
+
+    u.I[" domain: " q]
+    domain_chars*
+    u.I[q]
+
+   (u.D[":"]
+    u.I[" port: " q]
+    port_chars+
+    u.I[q])?
+
+   (u.D["/"]
+    u.I[" path: " q]
+    path_chars*
+    u.I[q])?
+
+   (u.D["?"]
+    u.I[" query_string: " q]
+    query_string_chars*
+    u.I[q])?
+
+   (u.D["#"]
+    u.I[" fragment_id: " q]
+    fragment_id_chars*
+    u.I[q])?
+    
+    u.I["}"]
+;
+
+    
+    
+
+    
+
+
+
+export WEBSITE = Optimize[website];

@@ -6,11 +6,12 @@ import 'time.grm' as t;
 import 'verbatim.grm' as v;
 import 'decimal.grm' as dc;
 import 'email.grm' as em;
+import 'website.grm' as wb;
 
 # Combines all of the semiotic classes together.
 
 export ALL = Optimize[
-  d.DATE | M.MEASURE | m.MONEY | n.CARDINAL_MARKUP | t.TIME | v.VERBATIM | dc.DECIMAL | em.EMAIL];
+  d.DATE | M.MEASURE | m.MONEY | n.CARDINAL_MARKUP | t.TIME | v.VERBATIM | dc.DECIMAL | em.EMAIL | wb.WEBSITE];
 
 # Exports the REDUP from money.
 export REDUP = m.REDUP;

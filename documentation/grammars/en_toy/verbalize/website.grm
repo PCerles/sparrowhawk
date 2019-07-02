@@ -1,0 +1,90 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+import 'numbers.grm' as n;
+
+q = u.q;
+s = u.s;
+d = b.kDigit;
+
+insspace = u.I[" "];
+
+# Protobuf: email { id { text: "john.smith" } domain { text: "gmail" } tld { text: "com" } }
+
+# TODO
+punct = (insspace ( 
+          ("." : "dot") 
+        | ("-" : "dash") 
+        | ("_" : "underscore") 
+        | ("&" : "and") 
+        | ("/" : "slash")
+        | ("?" : "question mark")
+        | ("=" : "equals")
+    ) insspace) | (b.kPunct : " " <2.0>)
+;
+
+digit_by_digit = (insspace (d @ n.CARDINAL))*;
+
+words_and_single_num = digit_by_digit | b.kAlpha*;
+
+words_and_single_num_and_punct = words_and_single_num* (punct* words_and_single_num*)*;
+
+
+# TODO: figure out fields
+website = 
+    u.D["electronic" s "{" s]
+
+   (u.D["protocol:" s q]
+    words_and_single_num*
+    u.D[q s]
+    u.I[" colon slash slash "])?
+
+    u.D["domain:" s q]
+    words_and_single_num_and_punct
+    u.D[q s]
+    
+   (u.D["port:" s q]
+    u.I[" port "]
+    words_and_single_num_and_punct
+    u.D[q s])?
+
+   (u.D["path:" s q]
+    u.I[" path "]
+    words_and_single_num_and_punct
+    u.D[q s])?
+
+   (u.D["query_string:" s q]
+    u.I[" query "]
+    words_and_single_num_and_punct
+    u.D[q s])?
+
+   (u.D["fragment_id:" s q]
+    u.I[" fragment i d "]
+    words_and_single_num_and_punct
+    u.D[q s])?
+
+    u.D[s "}"]
+
+
+
+
+
+
+    
+
+
+
+
+    #u.D["text_part:" s q]
+    #words_and_single_num*
+    #u.D[q s]
+
+    #u.I[" dot "]
+
+    #u.D["text_part:" s q]
+    #b.kAlpha* 
+   
+    #u.D[q s "}"]
+; 
+
+
+export WEBSITE = Optimize[website];
