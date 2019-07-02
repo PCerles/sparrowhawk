@@ -34,7 +34,7 @@ website =
     u.D["electronic" s "{" s]
 
    (u.D["protocol:" s q]
-    words_and_single_num*
+    words_and_single_num
     u.D[q s]
     u.I[" colon slash slash "])?
 
@@ -63,27 +63,6 @@ website =
     u.D[q s])?
 
     u.D[s "}"]
-
-
-
-
-
-
-    
-
-
-
-
-    #u.D["text_part:" s q]
-    #words_and_single_num*
-    #u.D[q s]
-
-    #u.I[" dot "]
-
-    #u.D["text_part:" s q]
-    #b.kAlpha* 
-   
-    #u.D[q s "}"]
 ; 
 
 
