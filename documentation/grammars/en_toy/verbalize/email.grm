@@ -6,6 +6,7 @@ q = u.q;
 s = u.s;
 d = b.kDigit;
 
+insspace = u.I[" "];
 
 # Protobuf: email { id { text: "john.smith" } domain { text: "gmail" } tld { text: "com" } }
 
@@ -26,7 +27,7 @@ punct = (u.I[" "] (
 ;
 
 words_and_single_num = (
-    (u.I[" "] (d @ n.CARDINAL))* | 
+    ( (insspace (d @ n.CARDINAL))* insspace ) | 
     b.kAlpha*
 );
 

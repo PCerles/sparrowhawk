@@ -22,7 +22,7 @@ punct = (insspace (
     ) insspace) | (b.kPunct : " " <2.0>)
 ;
 
-digit_by_digit = (insspace (d @ n.CARDINAL))*;
+digit_by_digit = (insspace (d @ n.CARDINAL))* insspace;
 
 words_and_single_num = digit_by_digit | b.kAlpha*;
 
