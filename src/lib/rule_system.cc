@@ -67,6 +67,84 @@ bool RuleSystem::LoadGrammar(const string& filename, const string& prefix) {
 }
 
 bool RuleSystem::ApplyRules(const Transducer& input,
+                            std::vector<MutableTransducer*>* outputs,
+                            bool use_lookahead) const {
+
+//  for (int i = 0; i < grammar_.rules_size(); ++i) {
+//    Rule rule = grammar_.rules(i);
+//    LoggerDebug(rule.main());
+//    LoggerDebug("%d", i);
+//  }
+
+  for (int i = 0; i < grammar_.rules_size(); ++i) {
+    MutableTransducer mutable_input(input);
+    MutableTransducer * output = new MutableTransducer;
+    Rule rule = grammar_.rules(i);
+    LoggerDebug(rule.main());
+    if (rule.has_redup()) {
+      const string& redup_rule = rule.redup();
+      MutableTransducer redup1;
+      // Not an error if it fails.
+      if (grm_->Rewrite(redup_rule, mutable_input, &redup1, "")) {
+        MutableTransducer redup2(redup1);
+        fst::Concat(redup1, &redup2);
+        fst::Union(&mutable_input, redup2);
+        fst::RmEpsilon(&mutable_input);
+      }
+    }
+    const string& rule_name = rule.main();
+    string parens_rule = rule.has_parens() ? rule.parens() : "";
+    // Only use lookahead on non (M)PDT's
+    bool success = true;
+    if (parens_rule.empty()
+        && use_lookahead) {
+      std::map<string, LookaheadFst*>::iterator iter =
+          lookaheads_.find(rule_name);
+      LookaheadFst *lookahead_rule_fst;
+      if (iter == lookaheads_.end()) {
+        const Transducer *rule_fst = grm_->GetFst(rule_name);
+        lookahead_rule_fst = new LookaheadFst(*rule_fst);
+        lookaheads_[rule_name] = lookahead_rule_fst;
+      } else {
+        lookahead_rule_fst = iter->second;
+      }
+      LabelLookAheadRelabeler<StdArc>::Relabel(&mutable_input,
+                                               *lookahead_rule_fst,
+                                               false);
+      fst::ComposeFst<StdArc> tmp_output(mutable_input,
+                                             *lookahead_rule_fst);
+      *output = tmp_output;
+      if (output->NumStates() == 0) {
+        success = false;
+      }
+      // Otherwise we just use the regular rewrite mechanism
+    } else if (!grm_->Rewrite(rule_name,
+                              mutable_input,
+                              output,
+                              parens_rule
+                              )
+        || output->NumStates() == 0) {
+      success = false;
+    }
+    if (!success) {
+      LoggerError("Application of rule \"%s\" failed", rule_name.c_str());
+    } else {
+      outputs->push_back(output);
+    }
+  }
+  // NB: We do NOT want to Project in this case because this will be the input
+  // to the ProtobufParser, which needs the input-side epsilons in order to keep
+  // track of positions in the input.
+  for (auto fst : *outputs) {
+    fst::RmEpsilon(fst);
+  }
+  return true;
+ 
+
+}
+
+
+bool RuleSystem::ApplyRules(const Transducer& input,
                             MutableTransducer* output,
                             bool use_lookahead) const {
   MutableTransducer mutable_input(input);

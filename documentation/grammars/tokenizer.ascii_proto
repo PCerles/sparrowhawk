@@ -2,4 +2,12 @@ grammar_file: "en_toy/classify/tokenize_and_classify.far"
 
 grammar_name: "TokenizerClassifier"
 
-rules { main: "TOKENIZE_AND_CLASSIFY" }
+rules { main:"CARDINAL" }
+rules { main:"DATE" }
+rules { main:"MEASURE" }
+rules { main:"MONEY" }
+rules { main:"WORD" }
+rules { main:"TIME" }
+rules { main:"DECIMAL" }
+rules { main:"EMAIL" }
+rules { main:"WEBSITE" }

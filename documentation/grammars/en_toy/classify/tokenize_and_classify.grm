@@ -9,8 +9,43 @@ import 'word.grm' as w;
 import 'decimal.grm' as dc;
 import 'email.grm' as em;
 import 'website.grm' as wb;
+import '../byte.grm' as b;
 
 types = c.CARDINAL | d.DATE | M.MEASURE | m.MONEY | w.WORD | t.TIME | dc.DECIMAL | em.EMAIL | wb.WEBSITE;
+
+tokens__CARDINAL =  u.I["tokens { "] c.CARDINAL u.I[" }"];
+tokens__DATE     =  u.I["tokens { "] d.DATE     u.I[" }"];
+tokens__MEASURE  =  u.I["tokens { "] M.MEASURE  u.I[" }"];
+tokens__MONEY    =  u.I["tokens { "] m.MONEY    u.I[" }"];
+tokens__WORD     =  u.I["tokens { "] w.WORD     u.I[" }"];
+tokens__TIME     =  u.I["tokens { "] t.TIME     u.I[" }"];
+tokens__DECIMAL  =  u.I["tokens { "] dc.DECIMAL u.I[" }"];
+tokens__EMAIL    =  u.I["tokens { "] em.EMAIL   u.I[" }"];
+tokens__WEBSITE  =  u.I["tokens { "] wb.WEBSITE u.I[" }"];
+
+
+tokens_with_punct__CARDINAL =  (p.PUNCT u.I[" "])*    tokens__CARDINAL   (u.I[" "] p.PUNCT)* ;
+tokens_with_punct__DATE     =  (p.PUNCT u.I[" "])*    tokens__DATE       (u.I[" "] p.PUNCT)* ;
+tokens_with_punct__MEASURE  =  (p.PUNCT u.I[" "])*    tokens__MEASURE    (u.I[" "] p.PUNCT)* ;
+tokens_with_punct__MONEY    =  (p.PUNCT u.I[" "])*    tokens__MONEY      (u.I[" "] p.PUNCT)* ;
+tokens_with_punct__WORD     =  (p.PUNCT u.I[" "])*    tokens__WORD       (u.I[" "] p.PUNCT)* ;
+tokens_with_punct__TIME     =  (p.PUNCT u.I[" "])*    tokens__TIME       (u.I[" "] p.PUNCT)* ;
+tokens_with_punct__DECIMAL  =  (p.PUNCT u.I[" "])*    tokens__DECIMAL    (u.I[" "] p.PUNCT)* ;
+tokens_with_punct__EMAIL    =  (p.PUNCT u.I[" "])*    tokens__EMAIL      (u.I[" "] p.PUNCT)* ;
+tokens_with_punct__WEBSITE  =  (p.PUNCT u.I[" "])*    tokens__WEBSITE    (u.I[" "] p.PUNCT)* ;
+
+
+
+export CARDINAL = Optimize[ tokens_with_punct__CARDINAL (" " tokens_with_punct__CARDINAL)*];
+export DATE     = Optimize[ tokens_with_punct__DATE     (" " tokens_with_punct__DATE    )*];
+export MEASURE  = Optimize[ tokens_with_punct__MEASURE  (" " tokens_with_punct__MEASURE )*];
+export MONEY    = Optimize[ tokens_with_punct__MONEY    (" " tokens_with_punct__MONEY   )*];
+export WORD     = Optimize[ tokens_with_punct__WORD     (" " tokens_with_punct__WORD    )*];
+export TIME     = Optimize[ tokens_with_punct__TIME     (" " tokens_with_punct__TIME    )*];
+export DECIMAL  = Optimize[ tokens_with_punct__DECIMAL  (" " tokens_with_punct__DECIMAL )*];
+export EMAIL    = Optimize[ tokens_with_punct__EMAIL    (" " tokens_with_punct__EMAIL   )*];
+export WEBSITE  = Optimize[ tokens_with_punct__WEBSITE  (" " tokens_with_punct__WEBSITE )*];
+
 
 token = u.I["tokens { "] types u.I[" }"];
 

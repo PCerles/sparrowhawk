@@ -15,6 +15,7 @@
 
 #include <memory>
 #include <string>
+#include <assert.h>
 using std::string;
 
 #include <google/protobuf/text_format.h>
@@ -32,6 +33,7 @@ using std::string;
 namespace speech {
 namespace sparrowhawk {
 
+typedef fst::StringPrinter<fst::StdArc> Printer;
 // TODO(rws): We actually need to do something with this.
 const char kDefaultSentenceBoundaryRegexp[] = "[\\.:!\\?] ";
 
@@ -39,8 +41,44 @@ Normalizer::Normalizer() { }
 
 Normalizer::~Normalizer() { }
 
+bool Normalizer::PrepareGrammars() {
+
+  string pathname_prefix = "/tts/sparrowhawk/documentation/grammars/en_toy/";
+
+  std::vector<string> verbalizer_grammars = {
+        "date.far",
+        "decimal.far",
+        "email.far",
+        "measure.far",
+        "money.far",
+        "numbers.far",
+        "plural_numbers.far",
+        "telephone.far",
+        "time.far",
+        "verbalize.far",
+        "verbatim.far",
+        "website.far"
+  };
+
+
+  for (string archive : verbalizer_grammars) {
+    std::unique_ptr<GrmManager> grm;
+    grm.reset(new GrmManager);
+
+    if (!grm->LoadArchive(pathname_prefix + "/" + "verbalize/" + archive)) {
+      LoggerError("Error loading archive from \"%s\"",
+                  archive.c_str());
+      return false;
+    }
+
+    grammars_.push_back(std::move(grm));
+  } 
+}
+
 bool Normalizer::Setup(const string &configuration_proto,
                        const string &pathname_prefix) {
+
+
   SparrowhawkConfiguration configuration;
   string proto_string = IOStream::LoadFileToString(pathname_prefix +
                                                    "/" + configuration_proto);
@@ -108,6 +146,9 @@ bool Normalizer::NormalizeAndShowLinks(
   *output = ShowLinks(utt.get());
   return true;
 }
+
+
+
 
 bool Normalizer::TokenizeAndClassifyUtt(Utterance *utt,
                                         const string &input) const {
@@ -212,12 +253,337 @@ bool Normalizer::VerbalizeSemioticClass(const Token &markup,
                                      false /* use_lookahead */)) {
     LoggerError("Failed to verbalize \"%s\"", ToString(local).c_str());
     return false;
-  }
-  return true;
+}
+}
+
+
+
+bool Normalizer::VerbalizeSemioticClass(const Token &markup, MutableTransducer* output) const {
+   Token local(markup);
+   CleanFields(&local);
+   MutableTransducer input_fst;
+   if (spec_serializer_ == nullptr) {
+     ProtobufSerializer serializer(&local, &input_fst);
+     serializer.SerializeToFst();
+   } else {
+     input_fst = spec_serializer_->Serialize(local);
+   }
+
+   if (!verbalizer_rules_->ApplyRules(input_fst,
+                                      output,
+                                      false /* use_lookahead */)) {
+     LoggerError("Failed to verbalize \"%s\"", ToString(local).c_str());
+     return false;
+   }
+
+   return true;
+
 }
 
 std::vector<string> Normalizer::SentenceSplitter(const string &input) const {
   return sentence_boundary_->ExtractSentences(input);
+}
+
+
+std::vector<string> Normalizer::TokenizeAndVerbalize(string word, MutableTransducer* res_output) {
+
+    typedef fst::StringCompiler<fst::StdArc> Compiler;
+    Compiler compiler(fst::StringTokenType::BYTE);
+    fst::VectorFst<fst::StdArc> transcript_lm;
+    if (!compiler(word, &transcript_lm)) {
+        printf("Failed to compile input string \"%s\"", word.c_str());
+        return {};
+    }
+
+
+    std::vector<MutableTransducer*> tok_fsts;
+    if (!tokenizer_classifier_rules_->ApplyRules(transcript_lm,
+                                                  &tok_fsts,
+                                                  true /*  use_lookahead */)) {
+       LoggerError("Failed to tokenize");
+       return {};
+    }
+
+    for (int i = 0; i < tok_fsts.size(); ++i) {
+        format_and_save_fst(tok_fsts[i], "abcdefghijklmnop" + i);
+    }
+
+    std::vector<MutableTransducer> verbalized;
+    std::vector<string> out;
+    for (MutableTransducer * tokenized : tok_fsts) {
+
+      MutableTransducer shortest_path;
+      fst::ShortestPath(*tokenized, &shortest_path);
+      format_and_save_fst(&shortest_path, "sp");
+      
+      Utterance utt;
+      ProtobufParser parser(&shortest_path);
+
+      if (!parser.ParseTokensFromFST(&utt, true /* set SEMIOTIC_CLASS */)) {
+        LoggerError("Failed to parse tokens from FST");
+        continue;
+      }
+
+      Compiler compiler(fst::StringTokenType::BYTE);
+      MutableTransducer concatenated_output;
+      concatenated_output.AddState();
+      concatenated_output.SetStart(0);
+      concatenated_output.SetFinal(0, 0.0);
+
+
+      for (int i = 0; i < utt.linguistic().tokens_size(); ++i) {
+          MutableTransducer output; 
+          Token *token = utt.mutable_linguistic()->mutable_tokens(i);
+          string token_form = ToString(*token);
+            
+          LoggerDebug("HERHERHEREHREHRER");
+          LoggerDebug(token->wordid());
+          LoggerDebug("HERHERHEREHREHRER");
+
+
+          LoggerDebug("\n");
+          LoggerDebug(token->wordid());
+          LoggerDebug("\n");
+          token->set_first_daughter(-1);  // Sets to default unset.
+          token->set_last_daughter(-1);   // Sets to default unset.
+          // Add a single silence for punctuation that forms phrase breaks. This is
+          // set via the grammar, though ultimately we'd like a proper phrasing
+          // module.
+          if (token->type() == Token::PUNCT) {
+            if (token->phrase_break() &&
+                (utt.linguistic().words_size() == 0 ||
+                 utt.linguistic().words(
+                     utt.linguistic().words_size() - 1).id() != "sil")) {
+                
+                /* insert epsilon for punctuation */
+                CompileStringToEpsilon("", &output);
+            }
+          } else if (token->type() == Token::SEMIOTIC_CLASS) {
+            if (!token->skip()) {
+              LoggerDebug("Verbalizing: [%s]\n", token_form.c_str());
+              string words;
+              if (VerbalizeSemioticClass(*token, &output)) {
+              } else {
+                break;
+                LoggerWarn("First-pass verbalization FAILED for [%s]",
+                           token_form.c_str());
+                // Back off to verbatim reading
+                string original_token = token->name();
+                token->Clear();
+                token->set_name(original_token);
+                token->set_verbatim(original_token);
+                if (VerbalizeSemioticClass(*token, &output)) {
+                  LoggerWarn("Reversion to verbatim succeeded for [%s]",
+                             original_token.c_str());
+                } else {
+                  // If we've done our checks right, we should never get here
+                  LoggerError("Verbalization FAILED for [%s]", token_form.c_str());
+              //continue;
+                break;
+                }
+              }
+            }
+          } else if (token->type() == Token::WORD) {
+            if (token->has_wordid()) {
+                /* Writes original string */
+                if (!compiler(token->wordid(), &output)) {
+                    printf("Failed to compile input string \"%s\"", token->wordid().c_str());
+                    //continue;
+                    break;
+                }
+            } else {
+              LoggerError("Token [%s] has type WORD but there is no word id",
+                          token_form.c_str());
+              //continue;
+              break;
+            }
+          } else {
+            LoggerError("No type found for [%s]", token_form.c_str());
+            //continue;
+            break;
+          }
+ 
+         /* Project and Optimize */       
+         MutableTransducer temp;
+         fst::Project(&output, fst::PROJECT_OUTPUT);
+
+         fst::ShortestPath(output, &temp);
+         output = std::move(temp);
+
+         fst::Minimize(&output);
+
+         fst::Determinize<fst::StdArc>(output, &temp);
+         output = std::move(temp);
+
+        /* Create space fst for concatenation of words */
+         MutableTransducer space;
+         space.AddState();
+         space.AddState();
+         space.AddArc(0, fst::StdArc(0, ' ', 0.0, 1));
+         space.SetStart(0);
+         space.SetFinal(1, 0.0);
+      
+         if (i > 0)
+            fst::Concat(&concatenated_output, space);
+
+         fst::Concat(&concatenated_output, output);
+      }
+      verbalized.push_back(concatenated_output);
+      LoggerDebug("Verbalize output: Words\n%s\n\n", LinearizeWords(&utt).c_str());
+    }
+
+    std::vector<string> verbalized_strings;
+    for (MutableTransducer verb : verbalized) {
+          MutableTransducer shortest_path;
+          fst::ShortestPath(verb, &shortest_path);
+          fst::Project(&shortest_path, fst::PROJECT_OUTPUT);
+          fst::RmEpsilon(&shortest_path);
+        
+          format_and_save_fst(&shortest_path, "shortest_path");
+
+          string output;
+          Printer printer(fst::StringTokenType::BYTE);
+          if (!printer.operator()(shortest_path, &output)) {
+              LoggerError("Failed to print to output string");
+              continue;
+          }
+          verbalized_strings.push_back(output);  
+    }
+          
+    return verbalized_strings;
+}
+
+
+bool Normalizer::CompileStringToEpsilon(string s, MutableTransducer* output) {
+    MutableTransducer word;
+    int index = 0;
+    for (char c : s) {
+        word.AddState();
+        word.AddArc(index, fst::StdArc(c, 0, 0.0, index+1));
+        ++index;
+    }
+    word.AddState();
+
+    word.SetStart(0);
+
+    word.SetFinal(s.length(), 0.0);
+
+    *output = std::move(word);
+}
+
+void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* output, fst::SymbolTable * syms) {
+    
+    typedef fst::StringCompiler<fst::StdArc> Compiler;
+    Compiler compiler(fst::StringTokenType::BYTE);
+
+    /* Separate words by spaces */
+    std::istringstream iss(transcript);
+    vector<string> words { std::istream_iterator<string>{iss},
+                           std::istream_iterator<string>{}     };
+
+    /* Create space fst for concatenation of words */
+    MutableTransducer space;
+    space.AddState();
+    space.AddState();
+    space.AddArc(0, fst::StdArc(0, ' ', 0.0, 1));
+    space.SetStart(0);
+    space.SetFinal(1, 0.0);
+
+    /* Init verbalizer */
+    MutableTransducer verbalizer;
+    verbalizer.AddState();
+    verbalizer.SetStart(0);
+    verbalizer.SetFinal(0, 0.0);
+
+
+    /* Construct verbalizer */
+    bool has_word = false;
+    for (string word : words) {
+        MutableTransducer output, word_fst;
+
+        std::vector<string> verbalized_strings = TokenizeAndVerbalize(word, &output);
+
+        /* Compile Fsts from verbalized strings */
+        bool classif = false;
+        for (string verb : verbalized_strings) {
+            MutableTransducer eps_verb_fst;
+        
+            /* Remove leading space */
+            while (verb[0] == ' ') verb.erase(verb.begin());
+    
+            /* Remove trailing space */
+            while (verb[verb.size()-1] == ' ') verb.erase(verb.end()-1);
+
+            if (verb == word) continue;
+            if (!compiler(verb, &eps_verb_fst)) {
+                printf("Failed to compile input string \"%s\"", transcript.c_str());
+                return;
+            }
+
+                        fst::Union(&word_fst, eps_verb_fst);
+            classif = true;
+        }
+
+        /* If there were no other classifications, revert to original string */
+        if (!classif) {
+            if (!compiler(word, &word_fst)) {
+                printf("Failed to compile input string \"%s\"", transcript.c_str());
+                return;
+            }
+        }
+    
+        fst::Project(&word_fst, fst::PROJECT_OUTPUT);
+        fst::RmEpsilon(&word_fst);
+      
+        /* Merge final states */        
+        fst::StdArc::StateId new_state_id = word_fst.AddState();
+        for (fst::StateIterator<fst::StdFst> siter(word_fst); !siter.Done(); siter.Next())  {
+            fst::StdArc::StateId state_id = siter.Value();
+            fst::StdArc::Weight weight = word_fst.Final(state_id);
+            if (weight != fst::StdArc::Weight::Zero()) {
+               word_fst.SetFinal(state_id, fst::StdArc::Weight::Zero());
+               word_fst.AddArc(state_id, fst::StdArc(0,0,0.0,new_state_id));
+            }
+        }
+        word_fst.SetFinal(new_state_id, fst::StdArc::Weight::One());
+        
+        MutableTransducer temp;
+        fst::Determinize<fst::StdArc>(word_fst, &temp);
+        word_fst = std::move(temp);
+
+        fst::Minimize(&word_fst);
+
+        if (has_word) fst::Concat(&verbalizer, space);
+        fst::Concat(&verbalizer, word_fst);
+        has_word = true;
+    }
+
+    MutableTransducer det;
+    fst::Project(&verbalizer, fst::PROJECT_OUTPUT);
+    fst::RmEpsilon(&verbalizer);
+
+    /* Merge final state */        
+    fst::StdArc::StateId new_state_id = verbalizer.AddState();
+    for (fst::StateIterator<fst::StdFst> siter(verbalizer); !siter.Done(); siter.Next())  {
+        fst::StdArc::StateId state_id = siter.Value();
+        fst::StdArc::Weight weight = verbalizer.Final(state_id);
+        if (weight != fst::StdArc::Weight::Zero()) {
+           verbalizer.SetFinal(state_id, fst::StdArc::Weight::Zero());
+           verbalizer.AddArc(state_id, fst::StdArc(0,0,0.0,new_state_id));
+        }
+    }
+    verbalizer.SetFinal(new_state_id, fst::StdArc::Weight::One());
+
+    format_and_save_fst(&verbalizer, "verbalizer");
+        
+    *output = std::move(verbalizer);
+}
+
+void Normalizer::format_and_save_fst(MutableTransducer * fst, char const * name, char const * IMAGE_DIR) const {
+    char buf[100];
+    sprintf(buf, "%s/%s.fst", IMAGE_DIR, name);
+    fst->Write(buf);
+    std::cout << name << " written" << std::endl;
 }
 
 }  // namespace sparrowhawk

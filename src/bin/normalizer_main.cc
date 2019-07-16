@@ -36,6 +36,7 @@
 #include <string>
 using std::string;
 #include <vector>
+#include <assert.h>
 using std::vector;
 
 #include <sparrowhawk/normalizer.h>
@@ -61,6 +62,19 @@ void NormalizeInputSingleWord(const string& input,
     std::cout << input << "|" << output << std::endl;
 }
 
+
+void BuildSymbolTable(fst::SymbolTable * output) {
+    assert (output->AddSymbol("<eps>") == 0);
+    assert (output->AddSymbol("I")  ==  1);
+    assert (output->AddSymbol("ATE") == 2);
+    assert (output->AddSymbol("TEN") == 3);
+    assert (output->AddSymbol("10") == 4);
+    assert (output->AddSymbol("ONE") == 5);
+    assert (output->AddSymbol("ZERO") == 6);
+    assert (output->AddSymbol("DONUTS") == 7);
+    assert (output->AddSymbol(" ") == 8);
+}
+
 int main(int argc, char** argv) {
   using speech::sparrowhawk::Normalizer;
   std::set_new_handler(FailedNewHandler);
@@ -69,6 +83,22 @@ int main(int argc, char** argv) {
   normalizer.reset(new Normalizer());
   CHECK(normalizer->Setup(FLAGS_config, FLAGS_path_prefix));
   string input;
+
+  fst::SymbolTable syms("test.syms");
+  BuildSymbolTable(&syms);
+
+  fst::StdVectorFst fst;
+  string in;// = "$10.01 abc 123 Jan. 1 2007";// test www.google.com";
+
+  int num = 0;
+  while (std::getline(std::cin, in))      {
+      normalizer->ConstructVerbalizer(in, &fst, &syms);
+      normalizer->format_and_save_fst(&fst, std::to_string(num++).c_str());
+  }
+
+
+  return 0;
+
   if (FLAGS_multi_line_text) {
     string line;
     while (std::getline(std::cin, line)) {

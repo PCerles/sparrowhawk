@@ -55,6 +55,11 @@ class RuleSystem {
   bool ApplyRules(const Transducer& input,
                   MutableTransducer* output,
                   bool use_lookahead) const;
+  
+  bool ApplyRules(const Transducer& input,
+                  std::vector<MutableTransducer*>* outputs,
+                  bool use_lookahead) const;
+
 
   // These two return the string of the shortest path.
   bool ApplyRules(const string& input,

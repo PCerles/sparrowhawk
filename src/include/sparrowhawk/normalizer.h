@@ -31,7 +31,6 @@ using std::string;
 #include <vector>
 using std::vector;
 
-#include <fst/compat.h>
 #include <sparrowhawk/items.pb.h>
 #include <sparrowhawk/sentence_boundary.h>
 #include <sparrowhawk/sparrowhawk_configuration.pb.h>
@@ -50,6 +49,8 @@ class Normalizer {
   // The functions definitions have been split across two files, normalizer.cc
   // and normalizer_utils.cc, just to keep things a littler tidier. Below we
   // indicate where each function is found.
+
+  bool PrepareGrammars();
 
   // normalizer.cc
   // Method to load and set data for each derived method
@@ -79,6 +80,11 @@ class Normalizer {
   // sentences. An application would normally call this first, and then
   // normalize each of the resulting sentences.
   std::vector<string> SentenceSplitter(const string &input) const;
+
+  std::vector<string> TokenizeAndVerbalize(string word, MutableTransducer* output);
+
+  void ConstructVerbalizer(string transcript, MutableTransducer * output, fst::SymbolTable * syms);
+  void format_and_save_fst(MutableTransducer * fst, char const * name, char const * IMAGE_DIR = "/tts/images/") const;
 
  private:
   // normalizer.cc
@@ -131,6 +137,10 @@ class Normalizer {
   // verbalization grammar fails.
   bool VerbalizeSemioticClass(const Token &markup, string *words) const;
 
+  bool VerbalizeSemioticClass(const Token &markup, MutableTransducer* output) const;
+
+  bool CompileStringToEpsilon(string s, MutableTransducer* output);
+
   // normalizer.cc
   // Performs verbalization on the input utterance, the second step of
   // normalization
@@ -142,6 +152,8 @@ class Normalizer {
   std::unique_ptr<SentenceBoundary> sentence_boundary_;
   std::unique_ptr<Serializer> spec_serializer_;
   std::set<string> sentence_boundary_exceptions_;
+
+  std::vector<std::unique_ptr<GrmManager>> grammars_;
 
   DISALLOW_COPY_AND_ASSIGN(Normalizer);
 };
