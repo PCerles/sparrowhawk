@@ -50,8 +50,6 @@ class Normalizer {
   // and normalizer_utils.cc, just to keep things a littler tidier. Below we
   // indicate where each function is found.
 
-  bool PrepareGrammars();
-
   // normalizer.cc
   // Method to load and set data for each derived method
   bool Setup(const string &configuration_proto, const string &pathname_prefix);

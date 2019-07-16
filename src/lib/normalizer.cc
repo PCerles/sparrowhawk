@@ -41,39 +41,6 @@ Normalizer::Normalizer() { }
 
 Normalizer::~Normalizer() { }
 
-bool Normalizer::PrepareGrammars() {
-
-  string pathname_prefix = "/tts/sparrowhawk/documentation/grammars/en_toy/";
-
-  std::vector<string> verbalizer_grammars = {
-        "date.far",
-        "decimal.far",
-        "email.far",
-        "measure.far",
-        "money.far",
-        "numbers.far",
-        "plural_numbers.far",
-        "telephone.far",
-        "time.far",
-        "verbalize.far",
-        "verbatim.far",
-        "website.far"
-  };
-
-
-  for (string archive : verbalizer_grammars) {
-    std::unique_ptr<GrmManager> grm;
-    grm.reset(new GrmManager);
-
-    if (!grm->LoadArchive(pathname_prefix + "/" + "verbalize/" + archive)) {
-      LoggerError("Error loading archive from \"%s\"",
-                  archive.c_str());
-      return false;
-    }
-
-    grammars_.push_back(std::move(grm));
-  } 
-}
 
 bool Normalizer::Setup(const string &configuration_proto,
                        const string &pathname_prefix) {
@@ -304,17 +271,12 @@ std::vector<string> Normalizer::TokenizeAndVerbalize(string word, MutableTransdu
        return {};
     }
 
-    for (int i = 0; i < tok_fsts.size(); ++i) {
-        format_and_save_fst(tok_fsts[i], "abcdefghijklmnop" + i);
-    }
-
     std::vector<MutableTransducer> verbalized;
     std::vector<string> out;
     for (MutableTransducer * tokenized : tok_fsts) {
 
       MutableTransducer shortest_path;
       fst::ShortestPath(*tokenized, &shortest_path);
-      format_and_save_fst(&shortest_path, "sp");
       
       Utterance utt;
       ProtobufParser parser(&shortest_path);
@@ -336,14 +298,6 @@ std::vector<string> Normalizer::TokenizeAndVerbalize(string word, MutableTransdu
           Token *token = utt.mutable_linguistic()->mutable_tokens(i);
           string token_form = ToString(*token);
             
-          LoggerDebug("HERHERHEREHREHRER");
-          LoggerDebug(token->wordid());
-          LoggerDebug("HERHERHEREHREHRER");
-
-
-          LoggerDebug("\n");
-          LoggerDebug(token->wordid());
-          LoggerDebug("\n");
           token->set_first_daughter(-1);  // Sets to default unset.
           token->set_last_daughter(-1);   // Sets to default unset.
           // Add a single silence for punctuation that forms phrase breaks. This is
@@ -439,8 +393,6 @@ std::vector<string> Normalizer::TokenizeAndVerbalize(string word, MutableTransdu
           fst::Project(&shortest_path, fst::PROJECT_OUTPUT);
           fst::RmEpsilon(&shortest_path);
         
-          format_and_save_fst(&shortest_path, "shortest_path");
-
           string output;
           Printer printer(fst::StringTokenType::BYTE);
           if (!printer.operator()(shortest_path, &output)) {
@@ -574,8 +526,6 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
     }
     verbalizer.SetFinal(new_state_id, fst::StdArc::Weight::One());
 
-    format_and_save_fst(&verbalizer, "verbalizer");
-        
     *output = std::move(verbalizer);
 }
 

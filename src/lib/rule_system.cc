@@ -80,7 +80,6 @@ bool RuleSystem::ApplyRules(const Transducer& input,
     MutableTransducer mutable_input(input);
     MutableTransducer * output = new MutableTransducer;
     Rule rule = grammar_.rules(i);
-    LoggerDebug(rule.main());
     if (rule.has_redup()) {
       const string& redup_rule = rule.redup();
       MutableTransducer redup1;
