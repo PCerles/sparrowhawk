@@ -1,0 +1,39 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+
+cardinal = LoadFst['CARDINAL_NUMBER_NAME'];
+
+insspace = "" : " ";
+zero  = "0" : "zero";
+
+units =   ("1" : "one")
+        | ("2" : "two")
+        | ("3" : "three")
+        | ("4" : "four")
+        | ("5" : "five")
+        | ("6" : "six")
+        | ("7" : "seven")
+        | ("8" : "eight")
+        | ("9" : "nine")
+;
+
+read_digit_by_digit = (units | zero) (insspace (units | zero))* ;
+
+q = u.q;
+
+# Used to allow for different numbers of spaces coming out of the serializer.
+s = u.s;
+
+decimal_markup =
+  u.D["decimal" s "{" s]
+  u.D["integer_part:" s q]
+  cardinal
+  u.I[" point "]
+  u.D[q s]
+  u.D["fractional_part:" s q]
+  read_digit_by_digit
+  u.D[q s]
+  u.D["}"]
+;
+
+export DECIMAL = decimal_markup;
