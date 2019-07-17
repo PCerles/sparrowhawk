@@ -1,6 +1,15 @@
 import '../byte.grm' as b;
 import '../util.grm' as u;
 
+
+# 10.5000
+#
+# into
+#
+# 'ten point five zero zero zero' or 'ten point five' or 'ten point fifty' or 'ten fifty'
+
+
+
 func decimal_markup[integer_part_match,sep_string,fractional_part_match] {
     q = u.q;
 
