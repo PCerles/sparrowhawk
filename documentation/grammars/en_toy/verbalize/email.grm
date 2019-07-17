@@ -35,21 +35,21 @@ user_id = words_and_single_num* (punct* words_and_single_num*)*;
 
 # TODO: figure out fields
 email = 
-    u.D["date" s "{" s]
+    u.D["electronic" s "{" s]
 
-    u.D["day:" s q]
+    u.D["username:" s q]
     user_id
     u.D[q s]
 
     u.I[" at "]
 
-    u.D["month:" s q]
+    u.D["domain:" s q]
     words_and_single_num*
     u.D[q s]
 
     u.I[" dot "]
 
-    u.D["year:" s q]
+    u.D["domain:" s q]
     b.kAlpha* 
    
     u.D[q s "}"]

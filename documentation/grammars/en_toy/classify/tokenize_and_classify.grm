@@ -10,6 +10,7 @@ import 'decimal.grm' as dc;
 import 'email.grm' as em;
 import 'website.grm' as wb;
 import '../byte.grm' as b;
+import 'fraction.grm' as f;
 
 types = c.CARDINAL | d.DATE | M.MEASURE | m.MONEY | w.WORD | t.TIME | dc.DECIMAL | em.EMAIL | wb.WEBSITE;
 
@@ -22,6 +23,7 @@ tokens__TIME     =  u.I["tokens { "] t.TIME     u.I[" }"];
 tokens__DECIMAL  =  u.I["tokens { "] dc.DECIMAL u.I[" }"];
 tokens__EMAIL    =  u.I["tokens { "] em.EMAIL   u.I[" }"];
 tokens__WEBSITE  =  u.I["tokens { "] wb.WEBSITE u.I[" }"];
+tokens__FRACTION =  u.I["tokens { "] f.FRACTION u.I[" }"];
 
 
 tokens_with_punct__CARDINAL =  (p.PUNCT u.I[" "])*    tokens__CARDINAL   (u.I[" "] p.PUNCT)* ;
@@ -33,6 +35,7 @@ tokens_with_punct__TIME     =  (p.PUNCT u.I[" "])*    tokens__TIME       (u.I[" 
 tokens_with_punct__DECIMAL  =  (p.PUNCT u.I[" "])*    tokens__DECIMAL    (u.I[" "] p.PUNCT)* ;
 tokens_with_punct__EMAIL    =  (p.PUNCT u.I[" "])*    tokens__EMAIL      (u.I[" "] p.PUNCT)* ;
 tokens_with_punct__WEBSITE  =  (p.PUNCT u.I[" "])*    tokens__WEBSITE    (u.I[" "] p.PUNCT)* ;
+tokens_with_punct__FRACTION =  (p.PUNCT u.I[" "])*    tokens__FRACTION    (u.I[" "] p.PUNCT)* ;
 
 
 
@@ -45,6 +48,7 @@ export TIME     = Optimize[ tokens_with_punct__TIME     (" " tokens_with_punct__
 export DECIMAL  = Optimize[ tokens_with_punct__DECIMAL  (" " tokens_with_punct__DECIMAL )*];
 export EMAIL    = Optimize[ tokens_with_punct__EMAIL    (" " tokens_with_punct__EMAIL   )*];
 export WEBSITE  = Optimize[ tokens_with_punct__WEBSITE  (" " tokens_with_punct__WEBSITE )*];
+export FRACTION = Optimize[ tokens_with_punct__FRACTION  (" " tokens_with_punct__FRACTION )*];
 
 
 token = u.I["tokens { "] types u.I[" }"];

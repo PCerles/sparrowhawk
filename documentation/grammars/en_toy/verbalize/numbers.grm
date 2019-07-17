@@ -35,4 +35,13 @@ cardinal_markup =
   u.D[s "}"]
 ;
 
+ordinal_markup =
+  u.D["cardinal" s "{" s]
+  u.D["integer:" s q]
+  ordinal
+  u.D[q]
+  u.D[s "}"]
+;
+
 export CARDINAL_MARKUP = Optimize[cardinal_markup];
+export ORDINAL_MARKUP = Optimize[ordinal_markup];
