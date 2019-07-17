@@ -2,4 +2,14 @@ grammar_file: "en_toy/verbalize/verbalize.far"
 
 grammar_name: "Verbalizer"
 
-rules { main: "ALL" redup: "REDUP" }
+rules { main:"DATE" }
+rules { main:"MEASURE" }
+rules { main:"CARDINAL_MARKUP" }
+rules { main:"ORDINAL_MARKUP" }
+rules { main:"TIME" }
+rules { main:"VERBATIM" }
+rules { main:"DECIMAL" }
+rules { main:"EMAIL" }
+rules { main:"WEBSITE" }
+rules { main:"MONEY" redup: "REDUP"}
+

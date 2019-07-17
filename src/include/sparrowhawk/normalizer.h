@@ -79,7 +79,7 @@ class Normalizer {
   // normalize each of the resulting sentences.
   std::vector<string> SentenceSplitter(const string &input) const;
 
-  std::vector<string> TokenizeAndVerbalize(string word, MutableTransducer* output);
+  std::vector<MutableTransducer> TokenizeAndVerbalize(string word, MutableTransducer* output);
 
   void ConstructVerbalizer(string transcript, MutableTransducer * output, fst::SymbolTable * syms);
   void format_and_save_fst(MutableTransducer * fst, char const * name, char const * IMAGE_DIR = "/tts/images/") const;
@@ -135,7 +135,7 @@ class Normalizer {
   // verbalization grammar fails.
   bool VerbalizeSemioticClass(const Token &markup, string *words) const;
 
-  bool VerbalizeSemioticClass(const Token &markup, MutableTransducer* output) const;
+  bool VerbalizeSemioticClass(const Token &markup, std::vector<MutableTransducer*>* output) const;
 
   bool CompileStringToEpsilon(string s, MutableTransducer* output);
 
