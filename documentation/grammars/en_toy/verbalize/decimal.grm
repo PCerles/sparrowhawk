@@ -69,6 +69,6 @@ atleast_two_fractional_sigfigs  = CDRewrite[u.D["0"]*, "[BOS]" d{2}, "[EOS]", si
 export DECIMAL              = decimal_markup[cardinal, " point ", read_digit_by_digit];                           # two point five zero zero
 export DECIMAL_COLLOQUIAL_1 = decimal_markup[cardinal, " point ", remove_trailing_zeros @ read_digit_by_digit];   # two point five 
 export DECIMAL_COLLOQUIAL_2 = decimal_markup[cardinal, " point ", atleast_two_fractional_sigfigs @ cardinal];     # two point fifty
-export DECIMAL_COLLOQUIAL_3 = decimal_markup[cardinal, " "      , atleast_two_fractional_sigfigs @ cardinal];     # two fifty
+export DECIMAL_COLLOQUIAL_3 = decimal_markup[cardinal, " "      , (d{2} d*) @ atleast_two_fractional_sigfigs @ cardinal];     # two fifty
 
 
