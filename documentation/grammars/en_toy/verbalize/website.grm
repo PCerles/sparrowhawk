@@ -8,7 +8,12 @@ d = b.kDigit;
 
 insspace = u.I[" "];
 
-# Protobuf: email { id { text: "john.smith" } domain { text: "gmail" } tld { text: "com" } }
+# electronic { protocol: "https" domain: "www.google.com" port: "8888" path:"test/path" query_string: "test=string" fragment_id: "fragid" }
+#
+# into 
+#
+# https www dot google dot com port eight eight eight eight path test slash path query test equals string fragment i d fragid
+
 
 # TODO
 punct = (insspace ( 
@@ -41,7 +46,7 @@ website =
     u.D["domain:" s q]
     words_and_single_num_and_punct
     u.D[q s]
-    
+
    (u.D["port:" s q]
     u.I[" port "]
     words_and_single_num_and_punct

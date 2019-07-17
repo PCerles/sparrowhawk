@@ -4,6 +4,15 @@ import '../util.grm' as u;
 d = b.kDigit;
 q = u.q;
 
+# (https://)?www.google.com(:8888)?(/test/path)?(?query=string)?(#fragid)?
+# 
+# into
+#
+# electronic { protocol: "https" domain: "www.google.com" port: "8888" path:"test/path" query_string: "query=string" fragment_id: "fragid" }
+#
+
+
+
 domain_chars = b.kGraph - (":" | "/" | "?" | "#");
 port_chars = b.kGraph - ("/" | "?" | "#");
 path_chars = b.kGraph - ("?" | "#");

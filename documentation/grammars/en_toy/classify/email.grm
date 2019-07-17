@@ -13,7 +13,15 @@ symbols = "!" | "#" | "$" | "%" | "&" | "'" | "*" | "+" | "-" | "/" | "=" | "?" 
 email_id_digits = b.kGraph - "@";
 domain_digits = b.kGraph - ".";
 
-# TODO: figure out fields
+
+#
+# john.smith@mail.com
+#
+# into 
+#
+# electronic { username: "john.smith" domain: "mail" domain: "com" }
+
+
 email =
     u.I["electronic { "]
     u.I["username: " q]

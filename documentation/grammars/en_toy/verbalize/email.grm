@@ -8,8 +8,12 @@ d = b.kDigit;
 
 insspace = u.I[" "];
 
-# Protobuf: email { id { text: "john.smith" } domain { text: "gmail" } tld { text: "com" } }
 
+# electronic { username: "john.smith" domain: "mail" domain: "com" }
+#
+# into
+#
+# john dot smith at mail dot com
 
 sigma_star = b.kBytes*;
 separate_punct1 = CDRewrite["" : " ", "", b.kPunct, sigma_star];

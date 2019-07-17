@@ -11,6 +11,23 @@ q = u.q;
 # Used to allow for different numbers of spaces coming out of the serializer.
 s = u.s;
 
+
+# 1/2
+#
+# into
+#
+# 'one over two' or 'one half' or 'a half'
+#
+#
+# 3/4
+#
+# into
+#
+# 'three over four' or 'three quarters'
+#
+#
+
+
 func fraction_markup[numerator_match,sep_string,denominator_match] {
     s = u.s;
     q = u.q;

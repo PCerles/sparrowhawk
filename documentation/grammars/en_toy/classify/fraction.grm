@@ -4,7 +4,13 @@ import '../util.grm' as u;
 d = b.kDigit;
 q = u.q;
 
-# 300 -> cardinal { integer: "300"}
+#
+# 1/2
+# 
+# into
+#
+# fraction { numerator: 1 denominator: 2 }
+#
 
 fraction =
   u.I["fraction { "]
