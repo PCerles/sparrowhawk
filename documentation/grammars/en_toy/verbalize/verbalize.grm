@@ -10,8 +10,16 @@ import 'website.grm' as wb;
 
 # Combines all of the semiotic classes together.
 
-export ALL = Optimize[
-  d.DATE | M.MEASURE | m.MONEY | n.CARDINAL_MARKUP | t.TIME | v.VERBATIM | dc.DECIMAL | em.EMAIL | wb.WEBSITE];
+export DATE            =  d.DATE ;
+export MEASURE         =  M.MEASURE ;
+export MONEY           =  m.MONEY ;
+export CARDINAL_MARKUP =  n.CARDINAL_MARKUP ;
+export ORDINAL_MARKUP  =  n.ORDINAL_MARKUP ;
+export TIME            =  t.TIME ;
+export VERBATIM        =  v.VERBATIM ;
+export DECIMAL         =  dc.DECIMAL ;
+export EMAIL           =  em.EMAIL ;
+export WEBSITE         =  wb.WEBSITE;
 
 # Exports the REDUP from money.
 export REDUP = m.REDUP;

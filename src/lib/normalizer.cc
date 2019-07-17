@@ -308,7 +308,7 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
                  utt.linguistic().words(
                      utt.linguistic().words_size() - 1).id() != "sil")) {
                 
-                /* insert epsilon for punctuation */
+                // insert epsilon for punctuation 
                 MutableTransducer output;
                 if (!CompileStringToEpsilon("", &output)) {
                     break;
@@ -342,7 +342,7 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
             }
           } else if (token->type() == Token::WORD) {
             if (token->has_wordid()) {
-                /* Writes original string */
+                // Writes original string 
                 MutableTransducer output;
                 if (!compiler(token->wordid(), &output)) {
                     printf("Failed to compile input string \"%s\"", token->wordid().c_str());
@@ -362,7 +362,7 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
             break;
           }
  
-         /* Project and Optimize */       
+         // Project and Optimize 
          MutableTransducer verbalization_union;
          verbalization_union.AddState();
          verbalization_union.SetStart(0);
@@ -387,18 +387,18 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
         verbalization_union.SetFinal(0, fst::StdArc::Weight::Zero());
         
 
-        /* Create space fst for concatenation of words */
-         MutableTransducer space;
-         space.AddState();
-         space.AddState();
-         space.AddArc(0, fst::StdArc(0, ' ', 0.0, 1));
-         space.SetStart(0);
-         space.SetFinal(1, 0.0);
+        // Create space fst for concatenation of words
+        MutableTransducer space;
+        space.AddState();
+        space.AddState();
+        space.AddArc(0, fst::StdArc(0, ' ', 0.0, 1));
+        space.SetStart(0);
+        space.SetFinal(1, 0.0);
       
-         if (i > 0)
-            fst::Concat(&concatenated_output, space);
+        if (i > 0)
+           fst::Concat(&concatenated_output, space);
 
-         fst::Concat(&concatenated_output, verbalization_union);
+        fst::Concat(&concatenated_output, verbalization_union);
       }
       verbalized.push_back(concatenated_output);
       LoggerDebug("Verbalize output: Words\n%s\n\n", LinearizeWords(&utt).c_str());
@@ -430,12 +430,12 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
     typedef fst::StringCompiler<fst::StdArc> Compiler;
     Compiler compiler(fst::StringTokenType::BYTE);
 
-    /* Separate words by spaces */
+    // Separate words by spaces
     std::istringstream iss(transcript);
     vector<string> words { std::istream_iterator<string>{iss},
                            std::istream_iterator<string>{}     };
 
-    /* Create space fst for concatenation of words */
+    // Create space fst for concatenation of words 
     MutableTransducer space;
     space.AddState();
     space.AddState();
@@ -443,14 +443,14 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
     space.SetStart(0);
     space.SetFinal(1, 0.0);
 
-    /* Init verbalizer */
+    // Init verbalizer
     MutableTransducer verbalizer;
     verbalizer.AddState();
     verbalizer.SetStart(0);
     verbalizer.SetFinal(0, 0.0);
 
 
-    /* Construct verbalizer */
+    // Construct verbalizer 
     bool has_word = false;
     for (string word : words) {
         MutableTransducer output, word_fst;
@@ -465,7 +465,7 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
         fst::Project(&word_fst, fst::PROJECT_OUTPUT);
         fst::RmEpsilon(&word_fst);
       
-        /* Merge final states */        
+        // Merge final states
         fst::StdArc::StateId new_state_id = word_fst.AddState();
         for (fst::StateIterator<fst::StdFst> siter(word_fst); !siter.Done(); siter.Next())  {
             fst::StdArc::StateId state_id = siter.Value();
@@ -492,7 +492,7 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
     fst::Project(&verbalizer, fst::PROJECT_OUTPUT);
     fst::RmEpsilon(&verbalizer);
 
-    /* Merge final state */        
+    // Merge final state       
     fst::StdArc::StateId new_state_id = verbalizer.AddState();
     for (fst::StateIterator<fst::StdFst> siter(verbalizer); !siter.Done(); siter.Next())  {
         fst::StdArc::StateId state_id = siter.Value();
