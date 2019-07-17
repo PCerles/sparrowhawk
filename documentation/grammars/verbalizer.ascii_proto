@@ -8,7 +8,6 @@ rules { main:"CARDINAL_MARKUP" }
 rules { main:"ORDINAL_MARKUP" }
 rules { main:"TIME" }
 rules { main:"VERBATIM" }
-rules { main:"DECIMAL" }
 rules { main:"EMAIL" }
 rules { main:"WEBSITE" }
 rules { main:"MONEY" redup: "REDUP"}
@@ -16,3 +15,8 @@ rules { main:"FRACTION_1" }
 rules { main:"FRACTION_2" }
 rules { main:"FRACTION_3" }
 rules { main:"FRACTION_4" }
+rules { main:"DECIMAL" }
+rules { main:"DECIMAL_COLLOQUIAL_1" }
+rules { main:"DECIMAL_COLLOQUIAL_2" }
+rules { main:"DECIMAL_COLLOQUIAL_3" }
+
