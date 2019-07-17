@@ -7,6 +7,7 @@ import 'verbatim.grm' as v;
 import 'decimal.grm' as dc;
 import 'email.grm' as em;
 import 'website.grm' as wb;
+import 'fraction.grm' as f;
 
 # Combines all of the semiotic classes together.
 
@@ -20,6 +21,10 @@ export VERBATIM        =  v.VERBATIM ;
 export DECIMAL         =  dc.DECIMAL ;
 export EMAIL           =  em.EMAIL ;
 export WEBSITE         =  wb.WEBSITE;
+export FRACTION_1      =  f.FRACTION_1;
+export FRACTION_2      =  f.FRACTION_2;
+export FRACTION_3      =  f.FRACTION_3;
+export FRACTION_4      =  f.FRACTION_4;
 
 # Exports the REDUP from money.
 export REDUP = m.REDUP;

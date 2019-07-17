@@ -11,3 +11,4 @@ rules { main:"TIME" }
 rules { main:"DECIMAL" }
 rules { main:"EMAIL" }
 rules { main:"WEBSITE" }
+rules { main:"FRACTION" }
