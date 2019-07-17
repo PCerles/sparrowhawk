@@ -67,18 +67,12 @@ bool RuleSystem::LoadGrammar(const string& filename, const string& prefix) {
 }
 
 bool RuleSystem::ApplyRules(const Transducer& input,
-                            std::vector<MutableTransducer*>* outputs,
+                            std::vector<MutableTransducer>* outputs,
                             bool use_lookahead) const {
-
-//  for (int i = 0; i < grammar_.rules_size(); ++i) {
-//    Rule rule = grammar_.rules(i);
-//    LoggerDebug(rule.main());
-//    LoggerDebug("%d", i);
-//  }
 
   for (int i = 0; i < grammar_.rules_size(); ++i) {
     MutableTransducer mutable_input(input);
-    MutableTransducer * output = new MutableTransducer;
+    MutableTransducer output;
     Rule rule = grammar_.rules(i);
     if (rule.has_redup()) {
       const string& redup_rule = rule.redup();
@@ -112,17 +106,17 @@ bool RuleSystem::ApplyRules(const Transducer& input,
                                                false);
       fst::ComposeFst<StdArc> tmp_output(mutable_input,
                                              *lookahead_rule_fst);
-      *output = tmp_output;
-      if (output->NumStates() == 0) {
+      output = tmp_output;
+      if (output.NumStates() == 0) {
         success = false;
       }
       // Otherwise we just use the regular rewrite mechanism
     } else if (!grm_->Rewrite(rule_name,
                               mutable_input,
-                              output,
+                              &output,
                               parens_rule
                               )
-        || output->NumStates() == 0) {
+        || output.NumStates() == 0) {
       success = false;
     }
     if (!success) {
@@ -135,7 +129,7 @@ bool RuleSystem::ApplyRules(const Transducer& input,
   // to the ProtobufParser, which needs the input-side epsilons in order to keep
   // track of positions in the input.
   for (auto fst : *outputs) {
-    fst::RmEpsilon(fst);
+    fst::RmEpsilon(&fst);
   }
   return true;
  

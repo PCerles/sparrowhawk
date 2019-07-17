@@ -135,7 +135,7 @@ class Normalizer {
   // verbalization grammar fails.
   bool VerbalizeSemioticClass(const Token &markup, string *words) const;
 
-  bool VerbalizeSemioticClass(const Token &markup, std::vector<MutableTransducer*>* output) const;
+  bool VerbalizeSemioticClass(const Token &markup, std::vector<MutableTransducer>* output) const;
 
   bool CompileStringToEpsilon(string s, MutableTransducer* output);
 

@@ -225,7 +225,7 @@ bool Normalizer::VerbalizeSemioticClass(const Token &markup,
 
 
 
-bool Normalizer::VerbalizeSemioticClass(const Token &markup, std::vector<MutableTransducer*>* output) const {
+bool Normalizer::VerbalizeSemioticClass(const Token &markup, std::vector<MutableTransducer>* output) const {
    Token local(markup);
    CleanFields(&local);
    MutableTransducer input_fst;
@@ -262,7 +262,7 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
     }
 
 
-    std::vector<MutableTransducer*> tok_fsts;
+    std::vector<MutableTransducer> tok_fsts;
     if (!tokenizer_classifier_rules_->ApplyRules(transcript_lm,
                                                   &tok_fsts,
                                                   true /*  use_lookahead */)) {
@@ -272,10 +272,10 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
 
     std::vector<MutableTransducer> verbalized;
     std::vector<string> out;
-    for (MutableTransducer * tokenized : tok_fsts) {
+    for (MutableTransducer tokenized : tok_fsts) {
 
       MutableTransducer shortest_path;
-      fst::ShortestPath(*tokenized, &shortest_path);
+      fst::ShortestPath(tokenized, &shortest_path);
       
       Utterance utt;
       ProtobufParser parser(&shortest_path);
@@ -293,7 +293,7 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
 
 
       for (int i = 0; i < utt.linguistic().tokens_size(); ++i) {
-          std::vector<MutableTransducer*> output_verbalizations; 
+          std::vector<MutableTransducer> output_verbalizations; 
           Token *token = utt.mutable_linguistic()->mutable_tokens(i);
           string token_form = ToString(*token);
             
@@ -309,9 +309,8 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
                      utt.linguistic().words_size() - 1).id() != "sil")) {
                 
                 /* insert epsilon for punctuation */
-                MutableTransducer* output = new MutableTransducer();
-                if (!CompileStringToEpsilon("", output)) {
-                    delete output;
+                MutableTransducer output;
+                if (!CompileStringToEpsilon("", &output)) {
                     break;
                 }
                 output_verbalizations.push_back(output);
@@ -344,11 +343,10 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
           } else if (token->type() == Token::WORD) {
             if (token->has_wordid()) {
                 /* Writes original string */
-                MutableTransducer * output = new MutableTransducer;
-                if (!compiler(token->wordid(), output)) {
+                MutableTransducer output;
+                if (!compiler(token->wordid(), &output)) {
                     printf("Failed to compile input string \"%s\"", token->wordid().c_str());
                     //continue;
-                    delete output;
                     break;
                 }
                 output_verbalizations.push_back(output);
@@ -369,23 +367,20 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
          verbalization_union.AddState();
          verbalization_union.SetStart(0);
          verbalization_union.SetFinal(0, 0.0);
-         int count = 0;
-         for (MutableTransducer* verbalization : output_verbalizations) {
-            
-             fst::Project(verbalization, fst::PROJECT_OUTPUT);
-             
+         for (MutableTransducer verbalization : output_verbalizations) {
+             fst::Project(&verbalization, fst::PROJECT_OUTPUT);
             
              MutableTransducer temp;
-             fst::ShortestPath(*verbalization, &temp);
-             *verbalization = std::move(temp);
+             fst::ShortestPath(verbalization, &temp);
+             verbalization = std::move(temp);
 
-             fst::Determinize<fst::StdArc>(*verbalization, &temp);
-             *verbalization = std::move(temp);
-             fst::Minimize(verbalization);
+             fst::Determinize<fst::StdArc>(verbalization, &temp);
+             verbalization = std::move(temp);
+             fst::Minimize(&verbalization);
 
-             fst::RmEpsilon(verbalization);
+             fst::RmEpsilon(&verbalization);
 
-             fst::Union(&verbalization_union, *verbalization);
+             fst::Union(&verbalization_union, verbalization);
         }
 
         fst::RmEpsilon(&verbalization_union);
@@ -410,24 +405,6 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
     }
 
     return verbalized;
-
-    //std::vector<string> verbalized_strings;
-    //for (MutableTransducer verb : verbalized) {
-    //      MutableTransducer shortest_path;
-    //      fst::ShortestPath(verb, &shortest_path);
-    //      fst::Project(&shortest_path, fst::PROJECT_OUTPUT);
-    //      fst::RmEpsilon(&shortest_path);
-    //    
-    //      string output;
-    //      Printer printer(fst::StringTokenType::BYTE);
-    //      if (!printer.operator()(shortest_path, &output)) {
-    //          LoggerError("Failed to print to output string");
-    //          continue;
-    //      }
-    //      verbalized_strings.push_back(output);  
-    //}
-          
-    //return verbalized_strings;
 }
 
 
@@ -480,36 +457,6 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
 
         std::vector<MutableTransducer> verbalized_strings = TokenizeAndVerbalize(word, &output);
 
-        
-
-        /* Compile Fsts from verbalized strings */
-        //bool classif = false;
-        //for (string verb : verbalized_strings) {
-        //    MutableTransducer eps_verb_fst;
-        //
-        //    /* Remove leading space */
-        //    while (verb[0] == ' ') verb.erase(verb.begin());
-    
-        //    /* Remove trailing space */
-        //    while (verb[verb.size()-1] == ' ') verb.erase(verb.end()-1);
-
-        //    if (verb == word) continue;
-        //    if (!compiler(verb, &eps_verb_fst)) {
-        //        printf("Failed to compile input string \"%s\"", transcript.c_str());
-        //        return;
-        //    }
-
-        //                fst::Union(&word_fst, eps_verb_fst);
-        //    classif = true;
-        //}
-
-        /* If there were no other classifications, revert to original string */
-        // if (!classif) {
-        //     if (!compiler(word, &word_fst)) {
-        //         printf("Failed to compile input string \"%s\"", transcript.c_str());
-        //         return;
-        //     }
-        // }
         word_fst = verbalized_strings[0];
         for (MutableTransducer expansion : verbalized_strings) {
             fst::Union(&word_fst, expansion);
@@ -533,7 +480,6 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
         MutableTransducer temp;
         fst::Determinize<fst::StdArc>(word_fst, &temp);
         word_fst = std::move(temp);
-
 
         fst::Minimize(&word_fst);
 

@@ -57,7 +57,7 @@ class RuleSystem {
                   bool use_lookahead) const;
   
   bool ApplyRules(const Transducer& input,
-                  std::vector<MutableTransducer*>* outputs,
+                  std::vector<MutableTransducer>* outputs,
                   bool use_lookahead) const;
 
 
