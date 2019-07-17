@@ -1,0 +1,37 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+
+d = b.kDigit;
+q = u.q;
+
+cc = d?;
+three_digit = d{3};
+four_digit = d{4};
+
+# Maps input of the form
+#
+# 1-800-233-4392
+# 612-850-3668
+#
+# into
+#
+# telephone { number_part: "6128503668" }
+#
+# telephone { number_part: "800" number_part: "2334392"
+# Etc.
+
+n = 
+  u.I["telephone { "]
+  u.I["number_part: " q]
+  cc
+  u.D["-"] ?
+  three_digit
+  u.D["-"]
+  three_digit
+  u.D["-"]
+  four_digit 
+  u.I[q]
+  u.I[" }"];
+
+
+export TELEPHONE = Optimize[n];

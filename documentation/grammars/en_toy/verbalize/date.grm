@@ -1,6 +1,7 @@
 import '../byte.grm' as b;
 import '../util.grm' as u;
 import 'numbers.grm' as n;
+import 'plural_numbers.grm' as pn;
 
 # quotation mark
 q = u.q;
@@ -28,6 +29,13 @@ year =
   | (("200" d) @ n.CARDINAL)
 ;
 
+year_plural =
+    (("19" @ n.CARDINAL) u.I[" "] pn.PLURAL_NUMBERS)
+  | (("20" @ n.CARDINAL) u.I[" "] pn.PLURAL_NUMBERS)
+  | ("2000" : "two thousands")
+;
+
+
 # Remove these if they occur
 
 field = (b.kAlpha | "_")+;
@@ -35,12 +43,30 @@ preserve_order = "preserve_order:" s "true" s;
 field_order = "field_order:" s q field q s;
 field_order_specs = (preserve_order | field_order)*;
 
+yp = 
+    u.D["date" s "{" s]
+    u.D["year: " s q]
+    year_plural
+    u.D[q s]
+    u.D["style:" s]
+    u.D["1"]
+    u.D[s]
+    u.D["}"];
+
+yy = 
+    u.D["date" s "{" s]
+    u.D["year: " s q]
+    year
+    u.D[q s]
+    u.D["}"];
+
 # Verbalization for MDY
 mdy =
   u.D["date" s "{" s]
   u.D["month:" s q]
   month
-  u.I[" the "]
+  u.I[" "]
+#  u.I[" the "]
   u.D[q s]
   u.D["day:" s q]
   day
@@ -70,4 +96,4 @@ dmy =
   u.D["}"]
 ;
 
-export DATE = Optimize[mdy | dmy];
+export DATE = Optimize[mdy | dmy | yy | yp];

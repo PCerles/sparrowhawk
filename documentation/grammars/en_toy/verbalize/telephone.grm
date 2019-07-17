@@ -1,7 +1,12 @@
 import '../byte.grm' as b;
 import '../util.grm' as u;
+import 'numbers.grm' as n;
 
-cardinal = LoadFst['CARDINAL_NUMBER_NAME'];
+# quotation mark
+q = u.q;
+
+# Used to allow for different numbers of spaces coming out of the serializer.
+s = u.s;
 
 insspace = "" : " ";
 zero  = "0" : "zero";
@@ -17,23 +22,17 @@ units =   ("1" : "one")
         | ("9" : "nine")
 ;
 
+#TODO 1-800
 read_digit_by_digit = (units | zero) (insspace (units | zero))* ;
 
-q = u.q;
-
-# Used to allow for different numbers of spaces coming out of the serializer.
-s = u.s;
-
-decimal_markup =
-  u.D["decimal" s "{" s]
-  u.D["integer_part:" s q]
-  cardinal
-  u.I[" point "]
-  u.D[q s]
-  u.D["fractional_part:" s q]
+# Verbalization for MDY
+n =
+  u.D["telephone" s "{" s]
+  u.D["number_part:" s q]
   read_digit_by_digit
   u.D[q s]
   u.D["}"]
 ;
 
-export DECIMAL = decimal_markup;
+
+export TELEPHONE = Optimize[n];

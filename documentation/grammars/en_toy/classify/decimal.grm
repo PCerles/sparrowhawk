@@ -1,20 +1,23 @@
 import '../byte.grm' as b;
 import '../util.grm' as u;
 
-d = b.kDigit;
 q = u.q;
 
+point = ".";
+d = b.kDigit;
+
+# 300.50 -> decimal { integer_part: "300" fractional_part: "50"}
 
 decimal =
-    u.I["decimal { "]
-    u.I["integer_part: " q]
-    d+
-    u.I[q]
-    u.D["."]
-    u.I[" fractional_part: " q]
-    d+
-    u.I[q]
-    u.I["}"]
+  u.I["decimal { "]
+  u.I["integer_part: " q]
+  d+
+  u.I[q]
+  u.D["."]
+  u.I[" fractional_part: " q]
+  d+
+  u.I[q]
+  u.I[" }"]
 ;
 
 export DECIMAL = Optimize[decimal];
