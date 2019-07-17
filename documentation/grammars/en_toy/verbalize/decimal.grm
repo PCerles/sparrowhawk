@@ -57,21 +57,18 @@ read_digit_by_digit = (units | zero) (insspace (units | zero))* ;
 ##
 # DECIMAL COLLOQUIAL 1
 
-remove_leading_spaces      = CDRewrite[u.D["0"]*, "[BOS]", "", sigma_star];
-remove_all_trailing_spaces = CDRewrite[u.D["0"]*, "", "[EOS]", sigma_star];
-strip_zeros                = remove_leading_spaces @ remove_all_trailing_spaces;
+remove_trailing_zeros = CDRewrite[u.D["0"]*, "", "[EOS]", sigma_star];
 
 ##
 # DECIMAL COLLOQUIAL 2
 
-keep_two_fractional_sigfigs  = CDRewrite[u.D["0"]*, "[BOS]" d{2}, "[EOS]", sigma_star];
-strip_zeros_two_sigfigs      = remove_leading_spaces @ keep_two_fractional_sigfigs; 
+atleast_two_fractional_sigfigs  = CDRewrite[u.D["0"]*, "[BOS]" d{2}, "[EOS]", sigma_star];
 
 
-                                                                                                        # orig: 2.500
-export DECIMAL              = decimal_markup[cardinal, " point ", read_digit_by_digit];                 # two point five zero zero
-export DECIMAL_COLLOQUIAL_1 = decimal_markup[cardinal, " point ", strip_zeros @ read_digit_by_digit];   # two point five 
-export DECIMAL_COLLOQUIAL_2 = decimal_markup[cardinal, " point ", strip_zeros_two_sigfigs @ cardinal];  # two point fifty
-export DECIMAL_COLLOQUIAL_3 = decimal_markup[cardinal, " "      , strip_zeros_two_sigfigs @ cardinal];  # two fifty
+                                                                                                                  # orig: 2.500
+export DECIMAL              = decimal_markup[cardinal, " point ", read_digit_by_digit];                           # two point five zero zero
+export DECIMAL_COLLOQUIAL_1 = decimal_markup[cardinal, " point ", remove_trailing_zeros @ read_digit_by_digit];   # two point five 
+export DECIMAL_COLLOQUIAL_2 = decimal_markup[cardinal, " point ", atleast_two_fractional_sigfigs @ cardinal];     # two point fifty
+export DECIMAL_COLLOQUIAL_3 = decimal_markup[cardinal, " "      , atleast_two_fractional_sigfigs @ cardinal];     # two fifty
 
 
