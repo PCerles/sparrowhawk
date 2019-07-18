@@ -28,7 +28,7 @@ website =
     u.I[q])?
 
     u.I[" domain: " q]
-    domain_chars*
+    domain_chars+ "." domain_chars+
     u.I[q]
 
    (u.D[":"]
