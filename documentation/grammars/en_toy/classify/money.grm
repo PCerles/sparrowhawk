@@ -15,6 +15,15 @@ currencies = StringFile['money.tsv'];
 #
 # The fractional part is optional.
 
+thousand = ("K" | "k") | (("T" | "t") ("H" | "h") ("O" | "o") ("U" | "u") ("S" | "s") ("A" | "a") ("N" | "n") ("D" | "d"));
+
+
+illion  = ("I" | "i") ("L" | "l") ("L" | "l") ("I" | "i") ("O" | "o") ("N" | "n");
+
+million  = ("M" | "m") illion?;
+billion  = ("B" | "b") illion?;
+trillion = ("T" | "t") (("R" | "r") illion)?;
+
 money =
   u.I["money { "]
   u.I["currency: " q]
@@ -26,8 +35,14 @@ money =
   u.I[q]
  (u.D["."]
   u.I[" fractional_part: " q]
-  d{2}
+  d+
   u.I[q])?
+
+   (  (u.D[thousand] u.I[" quantity: 0 "])
+    | (u.D[million]  u.I[" quantity: 1 "])
+    | (u.D[billion]  u.I[" quantity: 2 "])
+    | (u.D[trillion] u.I[" quantity: 3 "]) )?
+
   u.I["} }"]
 ;
 
