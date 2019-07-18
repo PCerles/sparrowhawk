@@ -9,9 +9,13 @@ q = u.q;
 cardinal =
   u.I["cardinal { "]
   u.I["integer: " q]
-  d+
+  d+ ("s":"s")?
   u.I[q]
   u.I[" }"]
 ;
+
+
+
+
 
 export CARDINAL = Optimize[cardinal];

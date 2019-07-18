@@ -14,6 +14,10 @@ import 'fraction.grm' as f;
 
 types = c.CARDINAL | d.DATE | M.MEASURE | m.MONEY | w.WORD | t.TIME | dc.DECIMAL | em.EMAIL | wb.WEBSITE;
 
+dashes = "-" : (" to " | " minus " | " through ");
+expand_dash = CDRewrite[dashes, "[BOS]", "[EOS]", b.kBytes*];
+
+
 tokens__CARDINAL =  u.I["tokens { "] c.CARDINAL u.I[" }"];
 tokens__DATE     =  u.I["tokens { "] d.DATE     u.I[" }"];
 tokens__MEASURE  =  u.I["tokens { "] M.MEASURE  u.I[" }"];
@@ -35,27 +39,27 @@ tokens_with_punct__TIME     =  (p.PUNCT u.I[" "])*    tokens__TIME       (u.I[" 
 tokens_with_punct__DECIMAL  =  (p.PUNCT u.I[" "])*    tokens__DECIMAL    (u.I[" "] p.PUNCT)* ;
 tokens_with_punct__EMAIL    =  (p.PUNCT u.I[" "])*    tokens__EMAIL      (u.I[" "] p.PUNCT)* ;
 tokens_with_punct__WEBSITE  =  (p.PUNCT u.I[" "])*    tokens__WEBSITE    (u.I[" "] p.PUNCT)* ;
-tokens_with_punct__FRACTION =  (p.PUNCT u.I[" "])*    tokens__FRACTION    (u.I[" "] p.PUNCT)* ;
+tokens_with_punct__FRACTION =  (p.PUNCT u.I[" "])*    tokens__FRACTION   (u.I[" "] p.PUNCT)* ;
 
 
 
-export CARDINAL = Optimize[ tokens_with_punct__CARDINAL (" " tokens_with_punct__CARDINAL)*];
-export DATE     = Optimize[ tokens_with_punct__DATE     (" " tokens_with_punct__DATE    )*];
-export MEASURE  = Optimize[ tokens_with_punct__MEASURE  (" " tokens_with_punct__MEASURE )*];
-export MONEY    = Optimize[ tokens_with_punct__MONEY    (" " tokens_with_punct__MONEY   )*];
-export WORD     = Optimize[ tokens_with_punct__WORD     (" " tokens_with_punct__WORD    )*];
-export TIME     = Optimize[ tokens_with_punct__TIME     (" " tokens_with_punct__TIME    )*];
-export DECIMAL  = Optimize[ tokens_with_punct__DECIMAL  (" " tokens_with_punct__DECIMAL )*];
-export EMAIL    = Optimize[ tokens_with_punct__EMAIL    (" " tokens_with_punct__EMAIL   )*];
-export WEBSITE  = Optimize[ tokens_with_punct__WEBSITE  (" " tokens_with_punct__WEBSITE )*];
-export FRACTION = Optimize[ tokens_with_punct__FRACTION  (" " tokens_with_punct__FRACTION )*];
-
-
-token = u.I["tokens { "] types u.I[" }"];
-
-token_plus_punct = (p.PUNCT u.I[" "])* token (u.I[" "] p.PUNCT)*;
-
-# Collection of all possible semiotic classes, including ordinary words.
+export CARDINAL = Optimize[ ( tokens_with_punct__CARDINAL (" " tokens_with_punct__CARDINAL)* ) @ expand_dash ];
+export DATE     = Optimize[ ( tokens_with_punct__DATE     (" " tokens_with_punct__DATE    )* ) @ expand_dash ];
+export MEASURE  = Optimize[ ( tokens_with_punct__MEASURE  (" " tokens_with_punct__MEASURE )* ) @ expand_dash ];
+export MONEY    = Optimize[ ( tokens_with_punct__MONEY    (" " tokens_with_punct__MONEY   )* ) @ expand_dash ];
+export WORD     = Optimize[ ( tokens_with_punct__WORD     (" " tokens_with_punct__WORD    )* ) @ expand_dash ];
+export TIME     = Optimize[ ( tokens_with_punct__TIME     (" " tokens_with_punct__TIME    )* ) @ expand_dash ];
+export DECIMAL  = Optimize[ ( tokens_with_punct__DECIMAL  (" " tokens_with_punct__DECIMAL )* ) @ expand_dash ];
+export EMAIL    = Optimize[ ( tokens_with_punct__EMAIL    (" " tokens_with_punct__EMAIL   )* ) @ expand_dash ];
+export WEBSITE  = Optimize[ ( tokens_with_punct__WEBSITE  (" " tokens_with_punct__WEBSITE )* ) @ expand_dash ];
+export FRACTION = Optimize[ ( tokens_with_punct__FRACTION (" " tokens_with_punct__FRACTION)* ) @ expand_dash ];
+                                                                                          
+                                                                                          
+token = u.I["tokens { "] types u.I[" }"];                                                 
+                                                                                          
+token_plus_punct = (p.PUNCT u.I[" "])* token (u.I[" "] p.PUNCT)*;                         
+                                                                                          
+# Collection of all possible semiotic classes, including ordinary words.                  
 
 export TOKENIZE_AND_CLASSIFY =
   Optimize[token_plus_punct (" " token_plus_punct)*]

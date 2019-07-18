@@ -97,7 +97,7 @@ money_all =
   u.D[s "fractional_part:" s q]
   (del_zero @ n.CARDINAL)
   u.D[q]
- (u.D[s "quantity:" s] d)?
+ (u.D[s "quantity:" s d])?
   u.D[s "}" s]
   u.D["currency:" s q]
   u.I[" "]

@@ -1,6 +1,5 @@
 import '../byte.grm' as b;
 import '../util.grm' as u;
-
 # English cardinal and ordinal number names are FSTs that are trained using the
 # algorithm reported in:
 #
@@ -29,10 +28,11 @@ s = u.s;
 cardinal_markup =
   u.D["cardinal" s "{" s]
   u.D["integer:" s q]
-  cardinal
+  cardinal ("s" : "s")?
   u.D[q]
   u.D[s "}"]
 ;
+
 
 ordinal_markup =
   u.D["ordinal" s "{" s]
@@ -42,5 +42,10 @@ ordinal_markup =
   u.D[s "}"]
 ;
 
+plural_rewrite = ("xs":"xes") | ("ys":"ies");
+
+cardinal_plural_markup = cardinal_markup @ CDRewrite[plural_rewrite,  "", "[EOS]", b.kBytes*];
+
 export CARDINAL_MARKUP = Optimize[cardinal_markup];
+export CARDINAL_PLURAL_MARKUP = Optimize[cardinal_plural_markup];
 export ORDINAL_MARKUP = Optimize[ordinal_markup];
