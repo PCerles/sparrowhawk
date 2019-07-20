@@ -8,7 +8,7 @@ const string SP_CONFIG      = "sparrowhawk_configuration.ascii_proto";
 const string SP_PATH_PREFIX = "/tts/sparrowhawk/documentation/grammars/";
 
 // Init
-static PyObject *NormalizerError;
+static PyObject * NormalizerError;
 static PyObject * normalizer_construct_acceptor(PyObject *self, PyObject *args);
 
 static PyMethodDef NormalizerMethods[] = {
