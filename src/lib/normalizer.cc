@@ -18,6 +18,8 @@
 #include <assert.h>
 using std::string;
 
+#include <fst/arcsort.h>
+#include <fst/closure.h>
 #include <google/protobuf/text_format.h>
 #include <sparrowhawk/items.pb.h>
 #include <sparrowhawk/sentence_boundary.h>
@@ -44,7 +46,6 @@ Normalizer::~Normalizer() { }
 
 bool Normalizer::Setup(const string &configuration_proto,
                        const string &pathname_prefix) {
-
 
   SparrowhawkConfiguration configuration;
   string proto_string = IOStream::LoadFileToString(pathname_prefix +
@@ -73,7 +74,7 @@ bool Normalizer::Setup(const string &configuration_proto,
   sentence_boundary_.reset(new SentenceBoundary(sentence_boundary_regexp));
   if (configuration.has_sentence_boundary_exceptions_file()) {
     if (!sentence_boundary_->LoadSentenceBoundaryExceptions(
-            configuration.sentence_boundary_exceptions_file())) {
+            pathname_prefix + '/' + configuration.sentence_boundary_exceptions_file())) {
       LoggerError("Cannot load sentence boundary exceptions file: %s",
                   configuration.sentence_boundary_exceptions_file().c_str());
     }
@@ -90,6 +91,7 @@ bool Normalizer::Setup(const string &configuration_proto,
       return false;
     }
   }
+  LoggerDebug("setting up normalizer");
   return true;
 }
 
@@ -261,7 +263,6 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
         return {};
     }
 
-
     std::vector<MutableTransducer> tok_fsts;
     if (!tokenizer_classifier_rules_->ApplyRules(transcript_lm,
                                                   &tok_fsts,
@@ -276,7 +277,8 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
 
       MutableTransducer shortest_path;
       fst::ShortestPath(tokenized, &shortest_path);
-      
+ 
+     
       Utterance utt;
       ProtobufParser parser(&shortest_path);
 
@@ -448,8 +450,6 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
     verbalizer.AddState();
     verbalizer.SetStart(0);
     verbalizer.SetFinal(0, 0.0);
-
-
     // Construct verbalizer 
     bool has_word = false;
     for (string word : words) {
@@ -504,7 +504,74 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
     }
     verbalizer.SetFinal(new_state_id, fst::StdArc::Weight::One());
 
+
     *output = std::move(verbalizer);
+
+//    // Rewrite dashes
+//    MutableTransducer dash_rewrite;
+//    dash_rewrite.AddState();
+//    dash_rewrite.AddState();
+//    dash_rewrite.AddArc(0, fst::StdArc('-', 0, 0.0, 1));
+//    dash_rewrite.SetStart(0);
+//    dash_rewrite.SetFinal(1, 0.0);
+//
+//    MutableTransducer dash_rewrite_suffix;
+//    std::vector<string> expansions { " to ", " minus ", " through " };
+//    for (string exp : expansions) {
+//        MutableTransducer string_fst;
+//        CompileStringToEpsilon(exp, &string_fst);       
+//        fst::Invert(&string_fst);
+//        fst::Union(&dash_rewrite_suffix, string_fst);
+//        break;
+//    }
+//
+//    fst::Concat(&dash_rewrite, dash_rewrite_suffix);
+//    
+//    // Merge final state       
+//    new_state_id = dash_rewrite.AddState();
+//    for (fst::StateIterator<fst::StdFst> siter(dash_rewrite); !siter.Done(); siter.Next())  {
+//        fst::StdArc::StateId state_id = siter.Value();
+//        fst::StdArc::Weight weight = dash_rewrite.Final(state_id);
+//        if (weight != fst::StdArc::Weight::Zero()) {
+//           dash_rewrite.SetFinal(state_id, fst::StdArc::Weight::Zero());
+//           dash_rewrite.AddArc(state_id, fst::StdArc(0,0,0.0,new_state_id));
+//        }
+//    }
+//    dash_rewrite.SetFinal(new_state_id, fst::StdArc::Weight::One());
+//    fst::Minimize(&dash_rewrite);
+//    fst::RmEpsilon(&dash_rewrite);
+//
+//    ArcSort(&dash_rewrite, fst::ILabelCompare<fst::StdArc>());
+//
+//    Closure(&dash_rewrite, fst::CLOSURE_PLUS);
+//
+//    format_and_save_fst(&dash_rewrite, "dash_rewrite", "/tts/images2/");
+//    
+//    MutableTransducer t;
+//
+//    t.AddState();
+//    t.AddState();
+//    t.AddState();
+//    t.AddArc(0, fst::StdArc('a', 'a', 0.0, 1));
+//    t.AddArc(1, fst::StdArc('-', '-', 0.0, 2));
+//    t.SetStart(0);
+//    t.SetFinal(2, 0.0);
+//
+//
+//    std::vector<MutableTransducer> app;
+//    if (!verbalizer_rules_->ApplyRules(verbalizer,
+//                                     &app,
+//                                     false /* use_lookahead */)) {
+//    LoggerError("Failed to verbalize dashes");
+//    return ;
+//}
+    //fst::ShortestPath(verbalizer, &t);
+//    int abc = 0;
+//    for (auto ko : app) {
+//    format_and_save_fst(&ko, "t234567" + abc++, "/tts/images2/");
+//    }
+//    fst::Compose<fst::StdArc>(t, dash_rewrite, output);
+
 }
 
 void Normalizer::format_and_save_fst(MutableTransducer * fst, char const * name, char const * IMAGE_DIR) const {
