@@ -9,7 +9,7 @@ q = u.q;
 cardinal =
   u.I["cardinal { "]
   u.I["integer: " q]
-  d+ ("s":"s")?
+  d+ (u.D["'"]? "s":"s")?
   u.I[q]
   u.I[" }"]
 ;
