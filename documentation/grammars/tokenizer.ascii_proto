@@ -3,6 +3,7 @@ grammar_file: "en_toy/classify/tokenize_and_classify.far"
 grammar_name: "TokenizerClassifier"
 
 rules { main:"CARDINAL" }
+rules { main:"ORDINAL" }
 rules { main:"DATE" }
 rules { main:"MEASURE" }
 rules { main:"MONEY" }
@@ -12,3 +13,4 @@ rules { main:"DECIMAL" }
 rules { main:"EMAIL" }
 rules { main:"WEBSITE" }
 rules { main:"FRACTION" }
+rules { main:"DASH_EXPANSION" }
