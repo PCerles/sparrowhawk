@@ -30,8 +30,6 @@ PyMODINIT_FUNC initnormalizer(void)
     Py_INCREF(NormalizerError);
     PyModule_AddObject(m, "error", NormalizerError);
 }
-/********/
-
 
 static PyObject * normalizer_construct_acceptor(PyObject *self, PyObject *args) 
 {
@@ -69,12 +67,12 @@ static PyObject * normalizer_construct_acceptor(PyObject *self, PyObject *args)
 
 int main(int argc, char *argv[])
 {
-    /* Pass argv[0] to the Python interpreter */
+    // Pass argv[0] to the Python interpreter 
     Py_SetProgramName(argv[0]);
 
-    /* Initialize the Python interpreter.  Required. */
+    // Initialize the Python interpreter.  Required. 
     Py_Initialize();
 
-    /* Add a static module */
+    // Add a static module 
     initnormalizer();
 }

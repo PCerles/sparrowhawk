@@ -5,6 +5,7 @@ grammar_name: "Verbalizer"
 rules { main:"DATE" }
 rules { main:"MEASURE" }
 rules { main:"CARDINAL_MARKUP" }
+rules { main:"ORDINAL_MARKUP" }
 rules { main:"CARDINAL_PLURAL_MARKUP" }
 rules { main:"ORDINAL_MARKUP" }
 rules { main:"TIME" }
@@ -20,4 +21,7 @@ rules { main:"DECIMAL" }
 rules { main:"DECIMAL_COLLOQUIAL_1" }
 rules { main:"DECIMAL_COLLOQUIAL_2" }
 rules { main:"DECIMAL_COLLOQUIAL_3" }
-
+rules { main:"DASH0" }
+rules { main:"DASH1" }
+rules { main:"DASH2" }
+rules { main:"DASH3" }

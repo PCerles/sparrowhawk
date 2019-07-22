@@ -17,7 +17,7 @@ import 'dash_expansion.grm' as dsh;
 types = c.CARDINAL | d.DATE | M.MEASURE | m.MONEY | w.WORD | t.TIME | dc.DECIMAL | em.EMAIL | wb.WEBSITE;
 
 tokens__CARDINAL       =  u.I["tokens { "] c.CARDINAL u.I[" }"];
-tokens__ORDINAL       =  u.I["tokens { "] o.ORDINAL u.I[" }"];
+tokens__ORDINAL        =  u.I["tokens { "]  o.ORDINAL u.I[" }"];
 tokens__DATE           =  u.I["tokens { "] d.DATE     u.I[" }"];
 tokens__MEASURE        =  u.I["tokens { "] M.MEASURE  u.I[" }"];
 tokens__MONEY          =  u.I["tokens { "] m.MONEY    u.I[" }"];
@@ -31,7 +31,7 @@ tokens__DASH_EXPANSION =  u.I["tokens { "] dsh.DASH_EXPANSION u.I[" }"];
 
 
 tokens_with_punct__CARDINAL =  (p.PUNCT u.I[" "])*    tokens__CARDINAL   (u.I[" "] p.PUNCT)* ;
-tokens_with_punct__ORDINAL =  (p.PUNCT u.I[" "])*    tokens__ORDINAL   (u.I[" "] p.PUNCT)* ;
+tokens_with_punct__ORDINAL  =  (p.PUNCT u.I[" "])*    tokens__ORDINAL   (u.I[" "] p.PUNCT)* ;
 tokens_with_punct__DATE     =  (p.PUNCT u.I[" "])*    tokens__DATE       (u.I[" "] p.PUNCT)* ;
 tokens_with_punct__MEASURE  =  (p.PUNCT u.I[" "])*    tokens__MEASURE    (u.I[" "] p.PUNCT)* ;
 tokens_with_punct__MONEY    =  (p.PUNCT u.I[" "])*    tokens__MONEY      (u.I[" "] p.PUNCT)* ;
@@ -57,8 +57,7 @@ export EMAIL    = Optimize[ ( tokens_with_punct__EMAIL    (" " tokens_with_punct
 export WEBSITE  = Optimize[ ( tokens_with_punct__WEBSITE  (" " tokens_with_punct__WEBSITE )* ) ];
 export FRACTION = Optimize[ ( tokens_with_punct__FRACTION (" " tokens_with_punct__FRACTION)* ) ];
 export DASH_EXPANSION = Optimize[ ( tokens_with_punct__DASH_EXPANSION (" " tokens_with_punct__DASH_EXPANSION)* ) ];
-                                                                                          
-                                                                                          
+ 
 token = u.I["tokens { "] types u.I[" }"];                                                 
                                                                                           
 token_plus_punct = (p.PUNCT u.I[" "])* token (u.I[" "] p.PUNCT)*;                         

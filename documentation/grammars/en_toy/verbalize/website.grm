@@ -72,3 +72,25 @@ website =
 
 
 export WEBSITE = Optimize[website];
+
+words_and_cardinal = n.CARDINAL | n.ORDINAL (u.D["st"] | u.D["rd"] | u.D["th"]) | b.kAlpha*;
+words_and_cardinal_and_punct = (words_and_cardinal punct* words_and_cardinal)*;
+
+dashes = 
+    u.D["electronic" s "{" s]
+
+    u.D["domain:" s q]
+    words_and_cardinal_and_punct
+    u.D[q s]
+
+    u.D[s "}"]
+; 
+
+ export DASH0 = dashes;
+ export DASH1 = dashes @ CDRewrite["dash" : "to", "", "", b.kBytes*];
+ export DASH2 = dashes @ CDRewrite["dash" : "minus", "", "", b.kBytes*];
+ export DASH3 = dashes @ CDRewrite["dash" : "through", "", "", b.kBytes*];
+# 
+
+
+

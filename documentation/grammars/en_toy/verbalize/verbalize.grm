@@ -30,9 +30,10 @@ export DECIMAL_COLLOQUIAL_1   =  dc.DECIMAL_COLLOQUIAL_1;
 export DECIMAL_COLLOQUIAL_2   =  dc.DECIMAL_COLLOQUIAL_2;
 export DECIMAL_COLLOQUIAL_3   =  dc.DECIMAL_COLLOQUIAL_3;
 export CARDINAL_PLURAL_MARKUP =  n.CARDINAL_PLURAL_MARKUP ;
-export DASH1 =  ed.DASH1 ;
-export DASH2 =  ed.DASH2 ;
-export DASH3 =  ed.DASH3 ;
+export DASH0 =  wb.DASH0 ;
+export DASH1 =  wb.DASH1 ;
+export DASH2 =  wb.DASH2 ;
+export DASH3 =  wb.DASH3 ;
 
 # Exports the REDUP from money.
 export REDUP = m.REDUP;
