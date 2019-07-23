@@ -78,7 +78,7 @@ cardinal_markup_dd =
 ordinal_markup_dd =
   u.D["ordinal" s "{" s]
   u.D["integer:" s q]
-  read_digit_by_digit ORDINAL ("s" : "s")?
+  read_digit_by_digit insspace ORDINAL ("s" : "s")?
   u.D[q]
   u.D[s "}"]
 ;

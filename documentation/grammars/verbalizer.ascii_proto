@@ -32,4 +32,5 @@ rules { main:"CARDINAL_PLURAL_MARKUP_DD"}
 rules { main:"ORDINAL_MARKUP_DD"}
 rules { main:"TELEPHONE"}
 rules { main:"HEIGHT"}
+rules { main:"HEIGHT2"}
 

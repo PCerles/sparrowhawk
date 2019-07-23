@@ -22,7 +22,7 @@ two_digit =
   | ("00" : "hundred")
 ;
 
-oX = ("19" | "18" | "17" | "16" | "15" | "14" | "13" | "12" | "11");
+oX = ("19" | "18" | "17" | "16" | "15" | "14" | "13" | "12" | "11" | "10");
 
 # Years are not read as cardinals, generally:
 year =
