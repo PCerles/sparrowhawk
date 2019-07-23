@@ -64,7 +64,6 @@ remove_trailing_zeros = CDRewrite[u.D["0"]*, "", "[EOS]", sigma_star];
 
 atleast_two_fractional_sigfigs  = CDRewrite[u.D["0"]*, "[BOS]" d{2}, "[EOS]", sigma_star];
 
-
                                                                                                                   # orig: 2.500
 export DECIMAL              = decimal_markup[cardinal, " point ", read_digit_by_digit];                           # two point five zero zero
 export DECIMAL_COLLOQUIAL_1 = decimal_markup[cardinal, " point ", remove_trailing_zeros @ read_digit_by_digit];   # two point five 

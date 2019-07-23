@@ -22,9 +22,11 @@ two_digit =
   | ("00" : "hundred")
 ;
 
+oX = ("19" | "18" | "17" | "16" | "15" | "14" | "13" | "12" | "11");
+
 # Years are not read as cardinals, generally:
 year =
-    (("19" @ n.CARDINAL) u.I[" "] two_digit)
+    (( oX  @ n.CARDINAL) u.I[" "] two_digit)
   | (("20" @ n.CARDINAL) u.I[" "] ((D d) @ two_digit))
   | (("200" d) @ n.CARDINAL)
 ;

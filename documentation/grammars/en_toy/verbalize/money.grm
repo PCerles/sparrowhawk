@@ -170,7 +170,7 @@ money_all_col =
   u.D[d+]
   u.D[q]
   u.D[s "fractional_part:" s q]
-  (("0":" oh ") @ n.CARDINAL)
+  ("0":" oh ")* n.CARDINAL
   u.D[q]
  (u.D[s "quantity:" s d])?
   u.D[s "}" s]
@@ -187,7 +187,7 @@ colloquialize = CDRewrite[(" dollars and " | "dollar and ") : " ", "", "", b.kBy
 
 export MONEY_COLLOQUIAL =
    Optimize[
-    ((money_whole | money_all_col | money_all_illions)
+    (money_all_col
      @ singularize ) @ colloquialize]
 ;
 

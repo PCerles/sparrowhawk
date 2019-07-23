@@ -34,5 +34,6 @@ n =
   u.D["}"]
 ;
 
+eighthundred = CDRewrite[(s "one eight zero zero" s) : " one eight hundred ", "[BOS]", "", b.kBytes*];
 
-export TELEPHONE = Optimize[n];
+export TELEPHONE = Optimize[n @ eighthundred];

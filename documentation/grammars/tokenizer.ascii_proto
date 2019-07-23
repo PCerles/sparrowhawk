@@ -15,3 +15,4 @@ rules { main:"WEBSITE" }
 rules { main:"FRACTION" }
 rules { main:"DASH_EXPANSION" }
 rules { main:"HEIGHT" }
+rules { main:"TELEPHONE" }
