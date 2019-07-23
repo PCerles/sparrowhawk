@@ -18,6 +18,8 @@ export ORDINAL = ordinal;
 
 export DIGITS = Optimize[digit (u.I[" "] digit)*];
 
+insspace = u.I[" "];
+
 q = u.q;
 
 # Used to allow for different numbers of spaces coming out of the serializer.
@@ -33,11 +35,20 @@ cardinal_markup =
   u.D[s "}"]
 ;
 
+triple_digit_colloquial =
+  u.D["cardinal" s "{" s]
+  u.D["integer:" s q]
+  (d @ CARDINAL) u.I[" "] (d{2} @ CARDINAL) ("s" : "s")?
+  u.D[q]
+  u.D[s "}"]
+;
+
+
 
 ordinal_markup =
   u.D["ordinal" s "{" s]
   u.D["integer:" s q]
-  ordinal
+  ordinal ("s" : "s")?
   u.D[q]
   u.D[s "}"]
 ;
@@ -48,4 +59,33 @@ cardinal_plural_markup = cardinal_markup @ CDRewrite[plural_rewrite,  "", "[EOS]
 
 export CARDINAL_MARKUP = Optimize[cardinal_markup];
 export CARDINAL_PLURAL_MARKUP = Optimize[cardinal_plural_markup];
+export CARDINAL_TRIPLE_DIGIT_COLLOQUIAL = Optimize[cardinal_markup @ CDRewrite[(" hundred " : " "), "", "", b.kBytes*]];
 export ORDINAL_MARKUP = Optimize[ordinal_markup];
+
+
+
+read_digit_by_digit = (d@CARDINAL) (insspace (d@CARDINAL))* ;
+
+cardinal_markup_dd =
+  u.D["cardinal" s "{" s]
+  u.D["integer:" s q]
+  read_digit_by_digit ("s" : "s")?
+  u.D[q]
+  u.D[s "}"]
+;
+
+
+ordinal_markup_dd =
+  u.D["ordinal" s "{" s]
+  u.D["integer:" s q]
+  read_digit_by_digit ORDINAL ("s" : "s")?
+  u.D[q]
+  u.D[s "}"]
+;
+
+
+cardinal_plural_markup_dd = cardinal_markup_dd @ CDRewrite[plural_rewrite,  "", "[EOS]", b.kBytes*];
+
+export CARDINAL_MARKUP_DD = Optimize[cardinal_markup_dd];
+export CARDINAL_PLURAL_MARKUP_DD = Optimize[cardinal_plural_markup_dd];
+export ORDINAL_MARKUP_DD = Optimize[ordinal_markup_dd];

@@ -24,31 +24,31 @@ website =
     u.I["electronic { "]
 
    (u.I[" protocol: " q]
-    b.kGraph* u.D["://"]
+    b.kGraph* u.D["://"] 
     u.I[q])?
 
     u.I[" domain: " q]
-    domain_chars+ "." domain_chars+
+    domain_chars+ "." domain_chars+ u.D["."]?
     u.I[q]
 
    (u.D[":"]
     u.I[" port: " q]
-    port_chars+
+    port_chars+ u.D["."]?
     u.I[q])?
 
    (u.D["/"]
     u.I[" path: " q]
-    path_chars*
+    path_chars* u.D["."]?
     u.I[q])?
 
    (u.D["?"]
     u.I[" query_string: " q]
-    query_string_chars*
+    query_string_chars* u.D["."]?
     u.I[q])?
 
    (u.D["#"]
     u.I[" fragment_id: " q]
-    fragment_id_chars*
+    fragment_id_chars* u.D["."]?
     u.I[q])?
     
     u.I["}"]

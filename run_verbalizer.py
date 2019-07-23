@@ -1,6 +1,7 @@
 import normalizer
 import pywrapfst as fst
 import sys
+from multiprocessing import Pool
 
 ''' Script for running an arbitrary string through the tokenizer + verbalizer 
     and printing every possible verbalization of the string
@@ -13,13 +14,11 @@ def construct_verbalizer(transcript):
     for line in fst_string.split('\n'): 
         print >> compiler, line
 
+    print(fst_string)
     return compiler.compile()
 
-for line in sys.stdin:
-    transcript = line.strip('\n')
-
+def run(transcript):
     verbalizer = construct_verbalizer(transcript)
-
 
     #############################
     #                           #
@@ -71,6 +70,9 @@ for line in sys.stdin:
         out_string += " ( {}) " if len(expansions) > 1 else "{}"
         out_string = out_string.format(' | '.join(strings))
 
-    print('\n\n{}'.format(out_string))
+
+    print('{}\n{}\n\n'.format(transcript, out_string))
 
 
+run(sys.argv[1])
+print(sys.argv[1])

@@ -5,6 +5,7 @@ grammar_name: "Verbalizer"
 rules { main:"DATE" }
 rules { main:"MEASURE" }
 rules { main:"CARDINAL_MARKUP" }
+rules { main:"CARDINAL_TRIPLE_DIGIT_COLLOQUIAL" }
 rules { main:"ORDINAL_MARKUP" }
 rules { main:"CARDINAL_PLURAL_MARKUP" }
 rules { main:"ORDINAL_MARKUP" }
@@ -13,6 +14,7 @@ rules { main:"VERBATIM" }
 rules { main:"EMAIL" }
 rules { main:"WEBSITE" }
 rules { main:"MONEY" redup: "REDUP"}
+rules { main:"MONEY_COLLOQUIAL" redup: "REDUP"}
 rules { main:"FRACTION_1" }
 rules { main:"FRACTION_2" }
 rules { main:"FRACTION_3" }
@@ -25,3 +27,9 @@ rules { main:"DASH0" }
 rules { main:"DASH1" }
 rules { main:"DASH2" }
 rules { main:"DASH3" }
+rules { main:"CARDINAL_MARKUP_DD"}
+rules { main:"CARDINAL_PLURAL_MARKUP_DD"}
+rules { main:"ORDINAL_MARKUP_DD"}
+rules { main:"TELEPHONE"}
+rules { main:"HEIGHT"}
+

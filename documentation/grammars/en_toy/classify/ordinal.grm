@@ -16,7 +16,7 @@ d = b.kDigit+ possible_endings;
 ordinal =
   u.I["ordinal { "]
   u.I["integer: " q]
-  d
+  d+ ("s":"s")?
   u.I[q]
   u.I[" }"]
 ;

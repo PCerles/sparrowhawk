@@ -147,6 +147,52 @@ export MONEY =
      @ singularize]
 ;
 
+money_all_col =
+  u.D["money" s "{" s]
+  u.D["amount" s "{" s]
+  u.D["integer_part:" s q]
+  n.CARDINAL
+  u.D[q]
+  u.D[" fractional_part:" s q]
+  u.D[d+]
+  u.D[q]
+ (u.D[s "quantity:" s d])?
+  u.D[s "}" s]
+  u.D["currency:" s q]
+  u.I[" "]
+  (ins_maj @ currencies)
+  u.D[q]
+  u.D[s "}" s]
+  u.I[" and "]
+  u.D["money" s "{" s]
+  u.D["amount" s "{" s]
+  u.D["integer_part:" s q]
+  u.D[d+]
+  u.D[q]
+  u.D[s "fractional_part:" s q]
+  (("0":" oh ") @ n.CARDINAL)
+  u.D[q]
+ (u.D[s "quantity:" s d])?
+  u.D[s "}" s]
+  u.D["currency:" s q]
+  u.I[" "]
+  (ins_min @ currencies)
+  u.D[q]
+  u.D[s "}"]
+;
+
+
+
+colloquialize = CDRewrite[(" dollars and " | "dollar and ") : " ", "", "", b.kBytes*] @ CDRewrite[(" cents" | " cent") : " ", "", "", b.kBytes*];
+
+export MONEY_COLLOQUIAL =
+   Optimize[
+    ((money_whole | money_all_col | money_all_illions)
+     @ singularize ) @ colloquialize]
+;
+
+
+
 # keep one space
 ks = s : " ";
 
