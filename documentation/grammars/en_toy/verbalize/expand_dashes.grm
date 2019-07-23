@@ -1,0 +1,51 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+import 'numbers.grm' as n;
+# English cardinal and ordinal number names are FSTs that are trained using the
+# algorithm reported in:
+#
+# Kyle Gorman and Richard Sproat. "Minimally supervised models for number
+# normalization." Transactions of the Association for Computational Linguistics. 2016.
+cardinal = LoadFst['CARDINAL_NUMBER_NAME'];
+ordinal = LoadFst['ORDINAL_NUMBER_NAME'];
+
+d = b.kDigit;
+
+digit = d @ cardinal;
+
+q = u.q;
+
+# Used to allow for different numbers of spaces coming out of the serializer.
+s = u.s;
+
+words_and_cardinal_and_ordinal = n.CARDINAL 
+                               | n.ORDINAL (
+                                    u.D["st" | "ST"] | u.D["nd" | "ND"] | u.D["rd" | "RD"] | u.D["th" | "TH"]
+                                 )
+                               | b.kAlpha*;
+
+_dash_markup = 
+    u.D["electronic" s "{" s]
+    u.D["username:" s q]
+    words_and_cardinal_and_ordinal
+    u.D[q s]
+    u.I[" - "]
+    u.D["protocol:" s q]
+    words_and_cardinal_and_ordinal
+    u.D[q s]
+    u.D["}"]
+;
+    
+
+
+dash1 = ("-" : "to");
+dash2 = ("-" : "minus");
+dash3 = ("-" : "through");
+
+
+
+ export DASH0 = _dash_markup;
+ export DASH1 = _dash_markup @ CDRewrite[dash1, "", "", b.kBytes*];
+ export DASH2 = _dash_markup @ CDRewrite[dash2, "", "", b.kBytes*];
+ export DASH3 = _dash_markup @ CDRewrite[dash3, "", "", b.kBytes*];
+#

@@ -1,0 +1,22 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+
+d = b.kDigit;
+q = u.q;
+
+# 300 -> cardinal { integer: "300"}
+
+feet = d+ ("'": "f");
+inches = d+ ( "\"" : "i")?;
+
+height =
+  u.I["cardinal { "]
+  u.I["integer: " q]
+  ((feet inches?) | (feet? inches))
+  u.I[q]
+  u.I[" }"]
+;
+
+
+
+export HEIGHT = Optimize[height];
