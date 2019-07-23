@@ -1,11 +1,12 @@
+#define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <iostream>
 #include <sparrowhawk/normalizer.h>
 #include <fst/script/print.h>
 
 // Config
-const string SP_CONFIG      = "sparrowhawk_configuration.ascii_proto";
-const string SP_PATH_PREFIX = "/tts/sparrowhawk/documentation/grammars/";
+// const string SP_CONFIG      = "sparrowhawk_configuration.ascii_proto";
+// const string SP_PATH_PREFIX = "/workspace/sparrowhawk/documentation/grammars/";
 
 // Init
 static PyObject * NormalizerError;
@@ -18,17 +19,27 @@ static PyMethodDef NormalizerMethods[] = {
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
-PyMODINIT_FUNC initnormalizer(void)
+static struct PyModuleDef normalizermodule = {
+    PyModuleDef_HEAD_INIT,
+    "normalizer",   /* name of module */
+    NULL, /* module documentation, may be NULL */
+    -1,       /* size of per-interpreter state of the module,
+                 or -1 if the module keeps state in global variables. */
+    NormalizerMethods
+};
+
+PyMODINIT_FUNC PyInit_normalizer(void)
 {
     PyObject *m;
 
-    m = Py_InitModule("normalizer", NormalizerMethods);
+    m = PyModule_Create(&normalizermodule);
     if (m == NULL)
-        return;
+        return NULL;
 
-    NormalizerError = PyErr_NewException("spam.error", NULL, NULL);
+    NormalizerError = PyErr_NewException("normalizer.error", NULL, NULL);
     Py_INCREF(NormalizerError);
     PyModule_AddObject(m, "error", NormalizerError);
+    return m;
 }
 
 static PyObject * normalizer_construct_acceptor(PyObject *self, PyObject *args) 
@@ -37,7 +48,9 @@ static PyObject * normalizer_construct_acceptor(PyObject *self, PyObject *args)
 
     // Parse arguments
     const char * transcript;
-    if (!PyArg_ParseTuple(args, "s", &transcript)) {
+    const char * sp_config;
+    const char * sp_path_prefix;
+    if (!PyArg_ParseTuple(args, "sss", &transcript, &sp_config, &sp_path_prefix)) {
         PyErr_SetString(NormalizerError, "Normalizer argument parsing failed.");
         return NULL;
     }
@@ -48,7 +61,7 @@ static PyObject * normalizer_construct_acceptor(PyObject *self, PyObject *args)
     std::unique_ptr<Normalizer> normalizer;
     normalizer.reset(new Normalizer());
 
-    bool res = normalizer->Setup(SP_CONFIG, SP_PATH_PREFIX);
+    bool res = normalizer->Setup(sp_config, sp_path_prefix);
     assert(res);
 
     // Construct Acceptor
@@ -67,12 +80,23 @@ static PyObject * normalizer_construct_acceptor(PyObject *self, PyObject *args)
 
 int main(int argc, char *argv[])
 {
-    // Pass argv[0] to the Python interpreter 
-    Py_SetProgramName(argv[0]);
+    wchar_t *program = Py_DecodeLocale(argv[0], NULL);
+    if (program == NULL) {
+        fprintf(stderr, "Fatal error: cannot decode argv[0]\n");
+        exit(1);
+    }
 
-    // Initialize the Python interpreter.  Required. 
+    /* Add a built-in module, before Py_Initialize */
+    PyImport_AppendInittab("normalizer", PyInit_normalizer);
+
+    /* Pass argv[0] to the Python interpreter */
+    Py_SetProgramName(program);
+
+    /* Initialize the Python interpreter.  Required. */
     Py_Initialize();
 
-    // Add a static module 
-    initnormalizer();
+    /* Optionally import the module; alternatively,
+       import can be deferred until the embedded script
+       imports it. */
+    PyImport_ImportModule("normalizer");
 }

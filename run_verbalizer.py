@@ -1,4 +1,6 @@
 import normalizer
+
+import functools
 import pywrapfst as fst
 import sys
 from multiprocessing import Pool
@@ -8,17 +10,19 @@ from multiprocessing import Pool
 '''
 
 
-def construct_verbalizer(transcript):
+def construct_verbalizer(transcript, sp_config, sp_path):
     compiler = fst.Compiler()
-    fst_string = normalizer.construct_acceptor(transcript)
+    fst_string = normalizer.construct_acceptor(transcript, sp_config, sp_path)
     for line in fst_string.split('\n'): 
-        print >> compiler, line
+        print(line, file=compiler)
 
     print(fst_string)
     return compiler.compile()
 
 def run(transcript):
-    verbalizer = construct_verbalizer(transcript)
+    verbalizer = construct_verbalizer(transcript,
+				     "sparrowhawk_configuration.ascii_proto",
+				     "/workspace/sparrowhawk/documentation/grammars/")
 
     #############################
     #                           #
@@ -56,7 +60,7 @@ def run(transcript):
     paths = get_all_paths(0, verbalizer.num_states()-1)
 
     # Nodes that show up in all paths separate tokens 
-    seps = reduce(lambda x,y: set(x) & set(y), paths)
+    seps = functools.reduce(lambda x,y: set(x) & set(y), paths)
     seps = sorted(list([s[0] for s in seps]))
     seps = [0] + seps
 
