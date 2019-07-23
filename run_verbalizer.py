@@ -14,7 +14,6 @@ def construct_verbalizer(transcript):
     for line in fst_string.split('\n'): 
         print >> compiler, line
 
-    print(fst_string)
     return compiler.compile()
 
 def run(transcript):
@@ -74,5 +73,4 @@ def run(transcript):
     print('{}\n{}\n\n'.format(transcript, out_string))
 
 
-run(sys.argv[1])
-print(sys.argv[1])
+run(sys.argv[1].lower())
