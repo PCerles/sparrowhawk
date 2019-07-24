@@ -127,7 +127,7 @@ bool RuleSystem::ApplyRules(const Transducer& input,
     fst::ShortestPath(output, &shortest_path);
     if (shortest_path.NumStates() != 0) {
       success = true;
-      outputs->push_back(output);
+      outputs->push_back(shortest_path);
     }
   }
   // NB: We do NOT want to Project in this case because this will be the input
