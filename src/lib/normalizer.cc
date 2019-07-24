@@ -16,6 +16,7 @@
 #include <memory>
 #include <string>
 #include <assert.h>
+#include <fst/script/print.h>
 using std::string;
 
 #include <fst/arcsort.h>
@@ -91,7 +92,7 @@ bool Normalizer::Setup(const string &configuration_proto,
       return false;
     }
   }
-  LoggerDebug("setting up normalizer");
+//  LoggerDebug("setting up normalizer");
   return true;
 }
 
@@ -319,7 +320,7 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
             }
           } else if (token->type() == Token::SEMIOTIC_CLASS) {
             if (!token->skip()) {
-              LoggerDebug("Verbalizing: [%s]\n", token_form.c_str());
+              //LoggerDebug("Verbalizing: [%s]\n", token_form.c_str());
               string words;
               if (VerbalizeSemioticClass(*token, &output_verbalizations)) {
               } else {
@@ -403,7 +404,7 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
         fst::Concat(&concatenated_output, verbalization_union);
       }
       verbalized.push_back(concatenated_output);
-      LoggerDebug("Verbalize output: Words\n%s\n\n", LinearizeWords(&utt).c_str());
+      //LoggerDebug("Verbalize output: Words\n%s\n\n", LinearizeWords(&utt).c_str());
     }
 
     return verbalized;
@@ -427,7 +428,17 @@ bool Normalizer::CompileStringToEpsilon(string s, MutableTransducer* output) {
     *output = std::move(word);
 }
 
-void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* output, fst::SymbolTable * syms) {
+std::string Normalizer::ConstructVerbalizerString(string transcript) {
+    MutableTransducer acceptor;
+    ConstructVerbalizer(transcript, &acceptor);
+
+    std::ostringstream outs;
+    fst::script::PrintFst(acceptor, outs);
+    string output_string = outs.str();
+    return output_string;
+}
+
+void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* output) {
     
     typedef fst::StringCompiler<fst::StdArc> Compiler;
     Compiler compiler(fst::StringTokenType::BYTE);

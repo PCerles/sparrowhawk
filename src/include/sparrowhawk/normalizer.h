@@ -81,7 +81,9 @@ class Normalizer {
 
   std::vector<MutableTransducer> TokenizeAndVerbalize(string word, MutableTransducer* output);
 
-  void ConstructVerbalizer(string transcript, MutableTransducer * output, fst::SymbolTable * syms);
+  void ConstructVerbalizer(string transcript, MutableTransducer * output);
+  std::string ConstructVerbalizerString(string transcript);
+
   void format_and_save_fst(MutableTransducer * fst, char const * name, char const * IMAGE_DIR = "/tts/images/") const;
 
  private:
@@ -153,7 +155,7 @@ class Normalizer {
 
   std::vector<std::unique_ptr<GrmManager>> grammars_;
 
-  DISALLOW_COPY_AND_ASSIGN(Normalizer);
+  //DISALLOW_COPY_AND_ASSIGN(Normalizer);
 };
 
 }  // namespace sparrowhawk
