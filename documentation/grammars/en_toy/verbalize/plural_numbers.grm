@@ -1,4 +1,5 @@
-decades = ("10" : "tens")
+decades =   ("00" : "hundreds")
+          | ("10" : "tens")
           | ("20" : "twenties")
           | ("30" : "thirties")
           | ("40" : "forties")

@@ -3,6 +3,7 @@ grammar_file: "en_toy/verbalize/verbalize.far"
 grammar_name: "Verbalizer"
 
 rules { main:"DATE" }
+rules { main:"YEAR_PLURAL" }
 rules { main:"MEASURE" }
 rules { main:"CARDINAL_MARKUP" }
 rules { main:"CARDINAL_TRIPLE_DIGIT_COLLOQUIAL" }
