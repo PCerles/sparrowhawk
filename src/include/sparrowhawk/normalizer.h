@@ -144,6 +144,12 @@ class Normalizer {
   // normalization
   bool VerbalizeUtt(Utterance *utt) const;
 
+  // Find the endpoint of a path representing 's'
+  std::vector<fst::StdArc::StateId> FindPath(char const * s, MutableTransducer * fst, fst::StdArc::StateId state) const;
+
+  void AddDifferentVerbalization(MutableTransducer* fst, char const* orig_verb, char * new_verb) const;
+
+
   string input_;
   std::unique_ptr<RuleSystem> tokenizer_classifier_rules_;
   std::unique_ptr<RuleSystem> verbalizer_rules_;

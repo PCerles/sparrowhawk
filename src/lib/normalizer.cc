@@ -369,6 +369,7 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
          verbalization_union.AddState();
          verbalization_union.SetStart(0);
          verbalization_union.SetFinal(0, 0.0);
+
          for (MutableTransducer verbalization : output_verbalizations) {
              fst::Project(&verbalization, fst::PROJECT_OUTPUT);
             
@@ -387,7 +388,8 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
 
         fst::RmEpsilon(&verbalization_union);
         verbalization_union.SetFinal(0, fst::StdArc::Weight::Zero());
-        
+
+        AddDifferentVerbalization(&verbalization_union, "zero", "oh");
 
         // Create space fst for concatenation of words
         MutableTransducer space;
@@ -402,11 +404,14 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
 
         fst::Concat(&concatenated_output, verbalization_union);
       }
+
+   
+
       verbalized.push_back(concatenated_output);
       LoggerDebug("Verbalize output: Words\n%s\n\n", LinearizeWords(&utt).c_str());
     }
 
-    return verbalized;
+        return verbalized;
 }
 
 
@@ -477,6 +482,9 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
         }
         word_fst.SetFinal(new_state_id, fst::StdArc::Weight::One());
         
+        
+
+
         MutableTransducer temp;
         fst::Determinize<fst::StdArc>(word_fst, &temp);
         word_fst = std::move(temp);
@@ -504,8 +512,57 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
     }
     verbalizer.SetFinal(new_state_id, fst::StdArc::Weight::One());
 
+        fst::RmEpsilon(&verbalizer);
 
+    format_and_save_fst(&verbalizer, "verbalizer");
     *output = std::move(verbalizer);
+}
+
+
+void Normalizer::AddDifferentVerbalization(MutableTransducer* fst, char const* orig_verb, char * new_verb) const {
+
+    for (fst::StateIterator<fst::StdFst> siter(*fst); !siter.Done(); siter.Next())  {
+        std::vector<fst::StdArc::StateId> path_endpoints = FindPath( orig_verb, fst, siter.Value() );
+        
+        for (fst::StdArc::StateId end_point : path_endpoints) {
+            fst::StdArc::StateId prev_state = siter.Value();
+
+            // Iterate over each character and add a new arc
+            for (char * c_iter = new_verb; *c_iter != '\0'; c_iter++) {
+                fst::StdArc::StateId new_state = fst->AddState();
+                fst->AddArc(prev_state, fst::StdArc(*c_iter, *c_iter, 0.0, new_state));
+                prev_state = new_state;
+            }
+            
+            fst->AddArc(prev_state, fst::StdArc(0,0,0.0,end_point));
+        }
+    }
+}
+
+std::vector<fst::StdArc::StateId> Normalizer::FindPath(char const * s, MutableTransducer * fst, fst::StdArc::StateId state) const {
+    using PathEndpoint = fst::StdArc::StateId;
+    std::vector<PathEndpoint> paths;
+    char current_char = *s;
+
+    if (current_char == '\0') return { state };
+
+    // Find arcs that have 'current_char' as their label
+    fst::Matcher<fst::StdFst> matcher(fst, fst::MATCH_INPUT);
+    matcher.SetState(state);
+    if (matcher.Find(current_char)) {
+        for(; !matcher.Done(); matcher.Next()) {
+            const fst::StdArc &arc = matcher.Value();
+
+            // Remove first character of string and recursively find endpoint of path
+            if (arc.olabel == current_char) {
+                std::vector<PathEndpoint> tail = FindPath(s+1, fst, arc.nextstate);
+                paths.insert(paths.end(), tail.begin(), tail.end()); // Concatenate vectors
+            }
+        }
+    }
+
+    return paths;
+}
 
 //    // Rewrite dashes
 //    MutableTransducer dash_rewrite;
@@ -572,7 +629,7 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
 //    }
 //    fst::Compose<fst::StdArc>(t, dash_rewrite, output);
 
-}
+///}
 
 void Normalizer::format_and_save_fst(MutableTransducer * fst, char const * name, char const * IMAGE_DIR) const {
     char buf[100];
