@@ -274,12 +274,8 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
 
     std::vector<MutableTransducer> verbalized;
     std::vector<string> out;
-    for (MutableTransducer tokenized : tok_fsts) {
+    for (MutableTransducer shortest_path : tok_fsts) {
 
-      MutableTransducer shortest_path;
-      fst::ShortestPath(tokenized, &shortest_path);
- 
-     
       Utterance utt;
       ProtobufParser parser(&shortest_path);
 
