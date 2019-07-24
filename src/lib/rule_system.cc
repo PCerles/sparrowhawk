@@ -69,11 +69,18 @@ bool RuleSystem::LoadGrammar(const string& filename, const string& prefix) {
 bool RuleSystem::ApplyRules(const Transducer& input,
                             std::vector<MutableTransducer>* outputs,
                             bool use_lookahead) const {
+  bool success = false;
+  const string WORD_RULE = "WORD";
 
   for (int i = 0; i < grammar_.rules_size(); ++i) {
+
+    Rule rule = grammar_.rules(i);
+    const string& rule_name = rule.main();
+    if (success and rule_name == WORD_RULE) { // relies on word rule being last
+        break;
+    }
     MutableTransducer mutable_input(input);
     MutableTransducer output;
-    Rule rule = grammar_.rules(i);
     if (rule.has_redup()) {
       const string& redup_rule = rule.redup();
       MutableTransducer redup1;
@@ -85,12 +92,11 @@ bool RuleSystem::ApplyRules(const Transducer& input,
         fst::RmEpsilon(&mutable_input);
       }
     }
-    const string& rule_name = rule.main();
     string parens_rule = rule.has_parens() ? rule.parens() : "";
     // Only use lookahead on non (M)PDT's
-    bool success = true;
     if (parens_rule.empty()
         && use_lookahead) {
+
       std::map<string, LookaheadFst*>::iterator iter =
           lookaheads_.find(rule_name);
       LookaheadFst *lookahead_rule_fst;
@@ -107,22 +113,21 @@ bool RuleSystem::ApplyRules(const Transducer& input,
       fst::ComposeFst<StdArc> tmp_output(mutable_input,
                                              *lookahead_rule_fst);
       output = tmp_output;
-      if (output.NumStates() == 0) {
-        success = false;
-      }
+
+      
       // Otherwise we just use the regular rewrite mechanism
-    } else if (!grm_->Rewrite(rule_name,
-                              mutable_input,
-                              &output,
-                              parens_rule
-                              )
-        || output.NumStates() == 0) {
-      success = false;
-    }
-    if (!success) {
-      LoggerError("Application of rule \"%s\" failed", rule_name.c_str());
     } else {
-      outputs->push_back(output);
+	grm_->Rewrite(rule_name,
+                      mutable_input,
+                      &output,
+                      parens_rule);
+                              
+    }
+    MutableTransducer shortest_path;
+    fst::ShortestPath(output, &shortest_path);
+    if (shortest_path.NumStates() != 0) {
+      success = true;
+      outputs->push_back(shortest_path);
     }
   }
   // NB: We do NOT want to Project in this case because this will be the input
@@ -133,7 +138,6 @@ bool RuleSystem::ApplyRules(const Transducer& input,
   }
   return true;
  
-
 }
 
 
