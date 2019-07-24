@@ -20,7 +20,7 @@ class get_pybind_include(object):
 module1 = Extension('normalizer',
                     sources = ['src/bin/py_normalizer.cc'],
                     extra_compile_args=['-std=c++11', '-O3', '-shared', '-fPIC', '-Wall'],
-                    library_dirs = ['/usr/local/lib', '-L/miniconda/envs/kaldi/lib/'],
+                    library_dirs = ['/usr/local/lib'],
                     libraries=['stdc++', 'sparrowhawk', 'dl', 'protobuf', 'protoc', 'thrax', 'fst', 'fstfar', 're2'],
                     include_dirs = ['/usr/local/include', 'src/include/', get_pybind_include(), get_pybind_include(user=True)])
 
