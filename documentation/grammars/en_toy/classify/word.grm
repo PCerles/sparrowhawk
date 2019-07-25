@@ -8,6 +8,6 @@ exceptions = StringFile['../../sentence_boundary_exceptions.txt'] <-10>;
 # Markup for ordinary tokens that don't match anything else.
 # output is a "name:" token. Cost is to make this analysis more expensive.
 
-word = u.I["name: " u.q] ((b.kNotSpace <1>)+ | exceptions) u.I[u.q];
+word = u.I["name: " u.q] (((b.kNotSpace <1>)+ | exceptions)  @ CDRewrite[(b.kPunct:"")*, "", "", b.kBytes*]) u.I[u.q];
 
-export WORD = Optimize[word];
+export WORD = Optimize[word]; 
