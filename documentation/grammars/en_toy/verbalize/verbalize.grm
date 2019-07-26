@@ -43,6 +43,7 @@ export DASH0                            =  ed.DASH0 ;
 export DASH1                            =  ed.DASH1 ;
 export DASH2                            =  ed.DASH2 ;
 export DASH3                            =  ed.DASH3 ;
+export DASH4                            =  ed.DASH4 ;
 export TELEPHONE                        =  te.TELEPHONE ;
 export CARDINAL_MARKUP_DD        = n.CARDINAL_MARKUP_DD;
 export CARDINAL_PLURAL_MARKUP_DD = n.CARDINAL_PLURAL_MARKUP_DD;

@@ -41,6 +41,7 @@ _dash_markup =
 dash1 = ("-" : "to");
 dash2 = ("-" : "minus");
 dash3 = ("-" : "through");
+dash4 = ("-" : " ");
 
 
 
@@ -48,4 +49,5 @@ dash3 = ("-" : "through");
  export DASH1 = _dash_markup @ CDRewrite[dash1, "", "", b.kBytes*];
  export DASH2 = _dash_markup @ CDRewrite[dash2, "", "", b.kBytes*];
  export DASH3 = _dash_markup @ CDRewrite[dash3, "", "", b.kBytes*];
+ export DASH4 = _dash_markup @ CDRewrite[dash4, "", "", b.kBytes*];
 #
