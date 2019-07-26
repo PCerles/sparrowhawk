@@ -11,7 +11,7 @@ d = b.kDigit;
 decimal =
   u.I["decimal { "]
   u.I["integer_part: " q]
-  d+
+  u.D["$"]? d+
   u.I[q]
   u.D["."]
   u.I[" fractional_part: " q]
