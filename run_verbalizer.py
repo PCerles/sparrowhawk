@@ -1,7 +1,8 @@
 import normalizer
-import pywrapfst as fst
 import sys
+from functools import reduce
 from multiprocessing import Pool
+
 
 ''' Script for running an arbitrary string through the tokenizer + verbalizer 
     and printing every possible verbalization of the string
@@ -9,10 +10,17 @@ from multiprocessing import Pool
 
 
 def construct_verbalizer(transcript):
-    compiler = fst.Compiler()
-    fst_string = normalizer.construct_acceptor(transcript)
+    norm = normalizer.Normalizer()
+    norm.setup("sparrowhawk_configuration.ascii_proto", "/workspace/sparrowhawk/documentation/grammars/")
+
+    fst_string = norm.construct_verbalizer_string(transcript)
+
+
+    import kaldi.fstext as fst
+
+    compiler = fst.StdFstCompiler()
     for line in fst_string.split('\n'): 
-        print >> compiler, line
+        print(line, file=compiler) 
 
     return compiler.compile()
 
