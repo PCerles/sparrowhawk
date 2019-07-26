@@ -519,8 +519,6 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
     }
     verbalizer.SetFinal(new_state_id, fst::StdArc::Weight::One());
 
-        fst::RmEpsilon(&verbalizer);
-
     format_and_save_fst(&verbalizer, "verbalizer");
     *output = std::move(verbalizer);
 }
