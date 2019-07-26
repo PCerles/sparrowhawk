@@ -28,6 +28,7 @@ s = u.s;
 #
 
 
+
 func fraction_markup[numerator_match,sep_string,denominator_match] {
     s = u.s;
     q = u.q;
@@ -35,11 +36,11 @@ func fraction_markup[numerator_match,sep_string,denominator_match] {
     fraction =
       u.D["fraction" s "{" s]
       u.D["numerator:" s q]
-      numerator_match
+      (numerator_match)
       u.D[q s]
       u.I[sep_string]
       u.D["denominator:" s q]
-      denominator_match
+      (denominator_match)
       u.D[q]
       u.D[s "}"]
     ;
@@ -47,16 +48,18 @@ func fraction_markup[numerator_match,sep_string,denominator_match] {
     return fraction;
 }
 
+ordinal_suffix = ("st" | "nd" | "rd" | "th");
+
 denom_verbs_singular = 
               ("2" : "half")
             | ("4" : "quarter")
-            | (n.ORDINAL <2.0>)
+            | (n.ORDINAL u.D[ordinal_suffix]? <2.0>)
 ;
 
 denom_verbs_plural = 
               ("2" : "halves")
             | ("4" : "quarters")
-            | ((n.ORDINAL u.I["s"]) <2.0>)
+            | ((n.ORDINAL u.D[ordinal_suffix]? (("":"s") | ("s":"s"))) <2.0>)
 ;
 
 
