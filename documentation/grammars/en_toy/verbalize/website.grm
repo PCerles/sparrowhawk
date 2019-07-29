@@ -7,6 +7,7 @@ s = u.s;
 d = b.kDigit;
 
 insspace = u.I[" "];
+multspace = CDRewrite[" "+ : " ", "", "", b.kBytes*];
 
 # electronic { protocol: "https" domain: "www.google.com" port: "8888" path:"test/path" query_string: "test=string" fragment_id: "fragid" }
 #
@@ -71,7 +72,7 @@ website =
 ; 
 
 
-export WEBSITE = Optimize[website];
+export WEBSITE = Optimize[website @ multspace];
 
 words_and_cardinal = n.CARDINAL | n.ORDINAL (u.D["st"] | u.D["rd"] | u.D["th"]) | b.kAlpha*;
 words_and_cardinal_and_punct = (words_and_cardinal punct* words_and_cardinal)*;
