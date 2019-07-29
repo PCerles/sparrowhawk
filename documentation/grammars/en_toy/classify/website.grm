@@ -13,11 +13,14 @@ q = u.q;
 
 
 
-domain_chars = b.kGraph - (":" | "/" | "?" | "#");
+domain_chars = b.kGraph - (":" | "/" | "?" | "#" | "$");
 port_chars = b.kGraph - ("/" | "?" | "#");
 path_chars = b.kGraph - ("?" | "#");
 query_string_chars = b.kGraph - "#";
 fragment_id_chars = b.kGraph;
+
+www = "www";
+endings = "." ("com" | "org" | "gov" | "us" | "net" | "edu");
 
 # TODO: figure out fields
 website =
@@ -28,7 +31,7 @@ website =
     u.I[q])?
 
     u.I[" domain: " q]
-    domain_chars+ "." domain_chars+ u.D["."]?
+    (www ".")? domain_chars+ endings
     u.I[q]
 
    (u.D[":"]
