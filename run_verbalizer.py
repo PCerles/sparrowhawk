@@ -1,4 +1,5 @@
 import normalizer
+import pywrapfst as fst
 import sys
 from functools import reduce
 from multiprocessing import Pool
@@ -12,20 +13,24 @@ from multiprocessing import Pool
 def construct_verbalizer(transcript):
     norm = normalizer.Normalizer()
     norm.setup("sparrowhawk_configuration.ascii_proto", "/workspace/sparrowhawk/documentation/grammars/")
-
     fst_string = norm.construct_verbalizer_string(transcript)
 
-
-    import kaldi.fstext as fst
-
-    compiler = fst.StdFstCompiler()
+    compiler = fst.Compiler()
     for line in fst_string.split('\n'): 
         print(line, file=compiler) 
 
     return compiler.compile()
 
 def run(transcript):
+    space_deduper = fst.Fst.read("assets/space_dedupe.fst")
+    
     verbalizer = construct_verbalizer(transcript)
+    verbalizer = verbalizer.project()
+    verbalizer = fst.compose(verbalizer, space_deduper).project(project_output=True).rmepsilon()
+    verbalizer.write('/home/philip/graves_loss/hive-speech/alignment/src/test.fst')
+
+
+    verbalizer.write('out.fst')
 
     #############################
     #                           #
@@ -80,5 +85,6 @@ def run(transcript):
 
     print('{}\n{}\n\n'.format(transcript, out_string))
 
-
-run(sys.argv[1].lower())
+with open(sys.argv[1], 'r') as f:
+    to_run = f.read()
+run(to_run)
