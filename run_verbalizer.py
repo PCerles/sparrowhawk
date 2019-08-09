@@ -13,18 +13,17 @@ from multiprocessing import Pool
 def construct_verbalizer(transcript):
     norm = normalizer.Normalizer()
     norm.setup("sparrowhawk_configuration.ascii_proto", "/workspace/sparrowhawk/documentation/grammars/")
-    fst_string = norm.construct_verbalizer_string(transcript)
+    fst_string, unique_vocab = norm.construct_verbalizer_string(transcript)
     compiler = fst.Compiler()
     for line in fst_string.split('\n'): 
         print(line, file=compiler) 
 
-    return compiler.compile()
+    return compiler.compile(), unique_vocab
 
 def run(transcript):
     space_deduper = fst.Fst.read("assets/space_dedupe.fst")
-    print(transcript)    
-    verbalizer = construct_verbalizer(transcript)
-    return
+    verbalizer, unique_vocab = construct_verbalizer(transcript)
+    print(unique_vocab)
 
 #    verbalizer = verbalizer.project()
     #verbalizer.write('/home/philip/graves_loss/hive-speech/alignment/src/test.fst')

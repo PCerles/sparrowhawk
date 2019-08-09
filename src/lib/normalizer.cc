@@ -392,7 +392,6 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word,
         verbalization_union.SetFinal(0, fst::StdArc::Weight::Zero());
 
         AddDifferentVerbalization(&verbalization_union, "zero", "oh");
-        AddDifferentVerbalization(&verbalization_union, "dollars", "");
 
         // Create space fst for concatenation of words
         MutableTransducer space;
