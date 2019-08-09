@@ -1,0 +1,40 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+
+d = b.kDigit;
+q = u.q;
+
+
+symbols = "!" | "#" | "$" | "%" | "&" | "'" | "*" | "+" | "-" | "/" | "=" | "?" | "^" | "_" | "`" | "{" | "|" | "}" | "~";
+
+
+#email_id_digits = b.kAlnum | symbols;
+
+email_id_digits = b.kGraph - "@";
+domain_digits = b.kGraph - ".";
+
+
+#
+# john.smith@mail.com
+#
+# into 
+#
+# electronic { username: "john.smith" domain: "mail" domain: "com" }
+
+
+email =
+    u.I["electronic { "]
+    u.I["username: " q]
+    email_id_digits+
+    u.I[q]
+    u.D["@"]
+    u.I["domain: " q]
+    domain_digits+
+    u.I[q]
+    u.D["."]
+    u.I["domain: " q]
+    b.kAlpha+
+    u.I[q "}"]
+;
+
+export EMAIL = Optimize[email];

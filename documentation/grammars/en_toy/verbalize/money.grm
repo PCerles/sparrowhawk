@@ -8,8 +8,24 @@ q = u.q;
 s = u.s;
 
 d = b.kDigit;
+a = b.kAlpha;
 
 currencies = StringFile['money.tsv'];
+insspace = u.I[" "];
+zero  = "0" : "zero";
+units =   ("1" : "one")
+        | ("2" : "two")
+        | ("3" : "three")
+        | ("4" : "four")
+        | ("5" : "five")
+        | ("6" : "six")
+        | ("7" : "seven")
+        | ("8" : "eight")
+        | ("9" : "nine")
+;
+
+read_digit_by_digit = (units | zero) (insspace (units | zero))* ;
+
 
 # Simple currency amounts such as:
 # money { amount { integer_part: "3"} currency: "usd" }
@@ -20,6 +36,15 @@ sigstar = b.kBytes*;
 ins_maj = CDRewrite[u.I["_maj"], "", "[EOS]", sigstar];
 ins_min = CDRewrite[u.I["_min"], "", "[EOS]", sigstar];
 
+
+illions = 
+    ("0" : " thousand")
+ |  ("1" : " million")
+ |  ("2" : " billion")
+ |  ("3" : " trillion")
+;
+
+
 # Removes the markup (allowing for various spacing possibilities in the
 # serialization) and verbalizes the remainder.
 money_whole =
@@ -27,7 +52,8 @@ money_whole =
   u.D["amount" s "{" s ""]
   u.D["integer_part:" s q]
   n.CARDINAL
-  u.D[q]
+  u.D[q s]
+ (u.D["quantity:" s] illions)?
   u.D[s "}" s]
   u.D["currency: " q]
   u.I[" "]
@@ -56,6 +82,7 @@ money_all =
   u.D[" fractional_part:" s q]
   u.D[d+]
   u.D[q]
+ (u.D[s "quantity:" s d])?
   u.D[s "}" s]
   u.D["currency:" s q]
   u.I[" "]
@@ -71,6 +98,7 @@ money_all =
   u.D[s "fractional_part:" s q]
   (del_zero @ n.CARDINAL)
   u.D[q]
+ (u.D[s "quantity:" s d] illions)?
   u.D[s "}" s]
   u.D["currency:" s q]
   u.I[" "]
@@ -78,6 +106,62 @@ money_all =
   u.D[q]
   u.D[s "}"]
 ;
+money_all_weighted = money_all <1>;
+
+money_cents =
+  u.D["money" s "{" s]
+  u.D["amount" s "{" s]
+  u.D["integer_part:" s q]
+  u.D["0"]
+  u.D[q]
+  u.D[" fractional_part:" s q]
+  u.D[d+]
+  u.D[q]
+ (u.D[s "quantity:" s d])?
+  u.D[s "}" s]
+  u.D["currency:" s q]
+#  (ins_maj @ currencies)
+  u.D[a+]
+  u.D[q]
+  u.D[s "}" s]
+  u.D["money" s "{" s]
+  u.D["amount" s "{" s]
+  u.D["integer_part:" s q]
+  u.D["0"]
+  u.D[q]
+  u.D[s "fractional_part:" s q]
+  (del_zero @ n.CARDINAL)
+  u.D[q]
+ (u.D[s "quantity:" s d])?
+  u.D[s "}" s]
+  u.D["currency:" s q]
+  u.I[" "]
+  (ins_min @ currencies)
+  u.D[q]
+  u.D[s "}"]
+;
+
+
+
+money_all_illions =
+  u.D["money" s "{" s]
+  u.D["amount" s "{" s]
+  u.D["integer_part:" s q]
+  n.CARDINAL
+  u.D[q]
+  u.I[" point "]
+  u.D[" fractional_part:" s q]
+  read_digit_by_digit
+  u.D[q]
+  u.D[s "quantity:" s] illions
+  u.D[s "}" s]
+  u.D["currency:" s q]
+  u.I[" "]
+  (ins_maj @ currencies)
+  u.D[q]
+  u.D[s "}" s]
+;
+
 
 # Singularize after "one" (as in measures).
 
@@ -95,8 +179,49 @@ singularize =
 
 export MONEY =
    Optimize[
-    (money_whole | money_all)
-   @ singularize]
+    (money_whole | money_all_weighted | money_cents | money_all_illions)
+     @ singularize]
+;
+
+money_all_col =
+  u.D["money" s "{" s]
+  u.D["amount" s "{" s]
+  u.D["integer_part:" s q]
+  n.CARDINAL
+  u.D[q]
+  u.D[" fractional_part:" s q]
+  u.D[d+]
+  u.D[q]
+ (u.D[s "quantity:" s d])?
+  u.D[s "}" s]
+  u.D["currency:" s q]
+  u.I[" "]
+  (ins_maj @ currencies)
+  u.D[q]
+  u.D[s "}" s]
+  u.I[" and "]
+  u.D["money" s "{" s]
+  u.D["amount" s "{" s]
+  u.D["integer_part:" s q]
+  u.D[d+]
+  u.D[q]
+  u.D[s "fractional_part:" s q]
+  ("0":" oh ")* n.CARDINAL
+  u.D[q]
+  u.D[s "}" s]
+  u.D["currency:" s q]
+  u.I[" "]
+  (ins_min @ currencies)
+  u.D[q]
+  u.D[s "}"]
+;
+
+colloquialize = CDRewrite[(" dollars and " | "dollar and ") : " ", "", "", b.kBytes*] @ CDRewrite[(" cents" | " cent") : " ", "", "", b.kBytes*];
+
+export MONEY_COLLOQUIAL =
+   Optimize[
+    (money_all_col
+     @ singularize ) @ colloquialize]
 ;
 
 # keep one space
@@ -112,6 +237,7 @@ redup =
   ks "fractional_part:" ks q
   d+
   q
+ (ks "quantity:" ks d)?
   ks "}" ks
   "currency:" ks q
   # Match to ins_maj then project back to the 3-letter code.

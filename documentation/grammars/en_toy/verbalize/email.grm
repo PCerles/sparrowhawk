@@ -1,0 +1,63 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+import 'numbers.grm' as n;
+
+q = u.q;
+s = u.s;
+d = b.kDigit;
+
+insspace = u.I[" "];
+
+
+# electronic { username: "john.smith" domain: "mail" domain: "com" }
+#
+# into
+#
+# john dot smith at mail dot com
+
+sigma_star = b.kBytes*;
+separate_punct1 = CDRewrite["" : " ", "", b.kPunct, sigma_star];
+separate_punct2 = CDRewrite["" : " ", b.kPunct, "", sigma_star];
+separate_punct = separate_punct1 @ separate_punct2;
+
+
+# TODO
+punct = (u.I[" "] ( 
+        ("." : "dot") |
+        ("-" : "dash") |
+        ("_" : "underscore") | 
+        ("&" : "and") 
+    ) u.I[" "]) | (b.kPunct : " " <2.0>)
+;
+
+words_and_single_num = (
+    ( (insspace (d @ n.CARDINAL))* insspace ) | 
+    b.kAlpha*
+);
+
+user_id = words_and_single_num* (punct* words_and_single_num*)*;
+
+# TODO: figure out fields
+email = 
+    u.D["electronic" s "{" s]
+
+    u.D["username:" s q]
+    user_id
+    u.D[q s]
+
+    u.I[" at "]
+
+    u.D["domain:" s q]
+    words_and_single_num*
+    u.D[q s]
+
+    u.I[" dot "]
+
+    u.D["domain:" s q]
+    b.kAlpha* 
+   
+    u.D[q s "}"]
+; 
+
+
+export EMAIL = Optimize[email];

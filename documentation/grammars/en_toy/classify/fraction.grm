@@ -1,0 +1,29 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+
+d = b.kDigit;
+q = u.q;
+
+#
+# 1/2
+# 
+# into
+#
+# fraction { numerator: 1 denominator: 2 }
+#
+
+ordinal_suffix = ("st" | "nd" | "rd" | "th") "s"?;
+
+fraction =
+  u.I["fraction { "]
+  u.I["numerator: " q]
+  d+
+  u.I[q]
+  u.D["/"]
+  u.I["denominator: " q]
+  d+ ordinal_suffix?
+  u.I[q]
+  u.I[" }"]
+;
+
+export FRACTION = Optimize[fraction];

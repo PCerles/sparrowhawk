@@ -1,7 +1,46 @@
 import '../byte.grm' as b;
 import '../util.grm' as u;
 
+
+# 10.5000
+#
+# into
+#
+# 'ten point five zero zero zero' or 'ten point five' or 'ten point fifty' or 'ten fifty'
+
+    q = u.q;
+
+    # Used to allow for different numbers of spaces coming out of the serializer.
+    s = u.s;
+
+
+
+func decimal_markup[integer_part_match,sep_string,fractional_part_match] {
+    q = u.q;
+
+    # Used to allow for different numbers of spaces coming out of the serializer.
+    s = u.s;
+
+    decimal =
+      u.D["decimal" s "{" s]
+      u.D["integer_part:" s q]
+      (integer_part_match)
+      u.I[sep_string]
+      u.D[q s]
+      u.D["fractional_part:" s q]
+      (fractional_part_match)
+      u.D[q s]
+      u.D["}"]
+    ;
+
+    return decimal;
+}
+
+sigma_star = b.kBytes*;
 cardinal = LoadFst['CARDINAL_NUMBER_NAME'];
+d = b.kDigit;
+
+# DECIMAL LITERAL
 
 insspace = "" : " ";
 zero  = "0" : "zero";
@@ -19,21 +58,21 @@ units =   ("1" : "one")
 
 read_digit_by_digit = (units | zero) (insspace (units | zero))* ;
 
-q = u.q;
 
-# Used to allow for different numbers of spaces coming out of the serializer.
-s = u.s;
+##
+# DECIMAL COLLOQUIAL 1
 
-decimal_markup =
-  u.D["decimal" s "{" s]
-  u.D["integer_part:" s q]
-  cardinal
-  u.I[" point "]
-  u.D[q s]
-  u.D["fractional_part:" s q]
-  read_digit_by_digit
-  u.D[q s]
-  u.D["}"]
-;
+remove_trailing_zeros = CDRewrite[u.D[s "zero" s], "", "[EOS]", sigma_star];
 
-export DECIMAL = decimal_markup;
+##
+# DECIMAL COLLOQUIAL 2
+
+atleast_two_fractional_sigfigs  = CDRewrite[u.D["0"]+, "[BOS]" d{2}, "[EOS]", sigma_star];
+
+                                                                                                                  # orig: 2.500
+export DECIMAL              = decimal_markup[cardinal, " point ", read_digit_by_digit];                           # two point five zero zero
+export DECIMAL_COLLOQUIAL_1 = decimal_markup[cardinal, " point ", remove_trailing_zeros @ read_digit_by_digit];   # two point five 
+export DECIMAL_COLLOQUIAL_2 = decimal_markup[cardinal, " point ", (d{2} d*) @ atleast_two_fractional_sigfigs @ cardinal];     # two point fifty
+export DECIMAL_COLLOQUIAL_3 = decimal_markup[cardinal, " "      , (d{2} d*) @ atleast_two_fractional_sigfigs @ cardinal];     # two fifty
+
+

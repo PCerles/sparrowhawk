@@ -1,0 +1,20 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+
+d = b.kDigit;
+q = u.q;
+# The weight is to override the analysis of "Jan." etc. as a separate word (see
+
+# Maps input of the form
+dash_expansion =
+  u.I["electronic { "]
+  u.I["username: " q]
+  (b.kBytes - "-")*
+  u.D["-"]
+  u.I[q " protocol: " q]
+  (b.kBytes - "-")* (u.D["."])?
+  u.I[q]
+  u.I[" }"];
+
+export DASH_EXPANSION = Optimize[dash_expansion];
+

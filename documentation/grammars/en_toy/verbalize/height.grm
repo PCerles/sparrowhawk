@@ -1,0 +1,44 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+import 'numbers.grm' as n;
+
+# English cardinal and ordinal number names are FSTs that are trained using the
+# algorithm reported in:
+#
+# Kyle Gorman and Richard Sproat. "Minimally supervised models for number
+# normalization." Transactions of the Association for Computational Linguistics. 2016.
+
+
+insspace = u.I[" "];
+
+q = u.q;
+
+# Used to allow for different numbers of spaces coming out of the serializer.
+s = u.s;
+
+
+
+feet = n.CARDINAL ("f" : " foot ");
+inches = n.CARDINAL ("i" : " inches ")?;
+
+height_markup = 
+  u.D["cardinal" s "{" s]
+  u.D["integer:" s q]
+  ((feet inches?) | (feet? inches))
+  u.D[q]
+  u.D[s "}"]
+;
+
+height_markup_2 = 
+  u.D["cardinal" s "{" s]
+  u.D["integer:" s q]
+  feet inches
+  u.D[q]
+  u.D[s "}"]
+;
+
+export HEIGHT = height_markup;
+export HEIGHT2 = height_markup_2 @ (CDRewrite[" foot ":" ", "", "", b.kBytes*] @ CDRewrite[" inches ":" ", "", "", b.kBytes*]);
+
+
+

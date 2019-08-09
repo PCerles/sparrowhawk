@@ -1,0 +1,80 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+import 'numbers.grm' as n;
+
+sigma_star = b.kBytes;
+
+d = b.kDigit;
+
+q = u.q;
+
+# Used to allow for different numbers of spaces coming out of the serializer.
+s = u.s;
+
+
+# 1/2
+#
+# into
+#
+# 'one over two' or 'one half' or 'a half'
+#
+#
+# 3/4
+#
+# into
+#
+# 'three over four' or 'three quarters'
+#
+#
+
+
+
+func fraction_markup[numerator_match,sep_string,denominator_match] {
+    s = u.s;
+    q = u.q;
+
+    fraction =
+      u.D["fraction" s "{" s]
+      u.D["numerator:" s q]
+      (numerator_match)
+      u.D[q s]
+      u.I[sep_string]
+      u.D["denominator:" s q]
+      (denominator_match)
+      u.D[q]
+      u.D[s "}"]
+    ;
+
+    return fraction;
+}
+
+ordinal_suffix = ("st" | "nd" | "rd" | "th");
+
+denom_verbs_singular = 
+              ("2" : "half")
+            | ("4" : "quarter")
+            | (n.ORDINAL u.D[ordinal_suffix]? <2.0>)
+;
+
+denom_verbs_plural = 
+              ("2" : "halves")
+            | ("4" : "quarters")
+            | ((n.ORDINAL u.D[ordinal_suffix]? (("":"s") | ("s":"s"))) <2.0>)
+;
+
+
+fraction_literal               = fraction_markup[n.CARDINAL, " over ", n.CARDINAL];
+fraction_colloquial_plural     = fraction_markup[n.CARDINAL , " ", denom_verbs_plural];
+fraction_colloquial_singular_1 = fraction_markup[("1":"one"), " ", denom_verbs_singular];
+fraction_colloquial_singular_2 = fraction_markup[("1":"a")  , " ", denom_verbs_singular];
+
+
+export FRACTION_1 = Optimize[fraction_literal];
+export FRACTION_2 = Optimize[fraction_colloquial_plural];
+export FRACTION_3 = Optimize[fraction_colloquial_singular_1];
+export FRACTION_4 = Optimize[fraction_colloquial_singular_2];
+
+export and_FRACTION_1 = Optimize[u.I["and "] fraction_literal];
+export and_FRACTION_2 = Optimize[u.I["and "] fraction_colloquial_plural];
+export and_FRACTION_3 = Optimize[u.I["and "] fraction_colloquial_singular_1];
+export and_FRACTION_4 = Optimize[u.I["and "] fraction_colloquial_singular_2];

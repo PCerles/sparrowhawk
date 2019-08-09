@@ -31,7 +31,6 @@ using std::string;
 #include <vector>
 using std::vector;
 
-#include <fst/compat.h>
 #include <sparrowhawk/items.pb.h>
 #include <sparrowhawk/sentence_boundary.h>
 #include <sparrowhawk/sparrowhawk_configuration.pb.h>
@@ -79,6 +78,13 @@ class Normalizer {
   // sentences. An application would normally call this first, and then
   // normalize each of the resulting sentences.
   std::vector<string> SentenceSplitter(const string &input) const;
+
+  std::vector<MutableTransducer> TokenizeAndVerbalize(string word, MutableTransducer* output);
+
+  void ConstructVerbalizer(string transcript, MutableTransducer * output);
+  std::string ConstructVerbalizerString(string transcript);
+
+  void format_and_save_fst(MutableTransducer * fst, char const * name, char const * IMAGE_DIR = "/tts/images/") const;
 
  private:
   // normalizer.cc
@@ -131,10 +137,20 @@ class Normalizer {
   // verbalization grammar fails.
   bool VerbalizeSemioticClass(const Token &markup, string *words) const;
 
+  bool VerbalizeSemioticClass(const Token &markup, std::vector<MutableTransducer>* output) const;
+
+  bool CompileStringToEpsilon(string s, MutableTransducer* output);
+
   // normalizer.cc
   // Performs verbalization on the input utterance, the second step of
   // normalization
   bool VerbalizeUtt(Utterance *utt) const;
+
+  // Find the endpoint of a path representing 's'
+  std::vector<fst::StdArc::StateId> FindPath(char const * s, MutableTransducer * fst, fst::StdArc::StateId state) const;
+
+  void AddDifferentVerbalization(MutableTransducer* fst, char const* orig_verb, char * new_verb) const;
+
 
   string input_;
   std::unique_ptr<RuleSystem> tokenizer_classifier_rules_;
@@ -143,7 +159,9 @@ class Normalizer {
   std::unique_ptr<Serializer> spec_serializer_;
   std::set<string> sentence_boundary_exceptions_;
 
-  DISALLOW_COPY_AND_ASSIGN(Normalizer);
+  std::vector<std::unique_ptr<GrmManager>> grammars_;
+
+  //DISALLOW_COPY_AND_ASSIGN(Normalizer);
 };
 
 }  // namespace sparrowhawk

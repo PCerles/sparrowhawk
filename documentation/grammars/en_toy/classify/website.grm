@@ -1,0 +1,67 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+
+d = b.kDigit;
+q = u.q;
+
+# (https://)?www.google.com(:8888)?(/test/path)?(?query=string)?(#fragid)?
+# 
+# into
+#
+# electronic { protocol: "https" domain: "www.google.com" port: "8888" path:"test/path" query_string: "query=string" fragment_id: "fragid" }
+#
+
+
+
+domain_chars = b.kGraph - (":" | "/" | "?" | "#" | "$");
+port_chars = b.kGraph - ("/" | "?" | "#");
+path_chars = b.kGraph - ("?" | "#");
+query_string_chars = b.kGraph - "#";
+fragment_id_chars = b.kGraph;
+
+www = "www";
+endings = "." ("com" | "org" | "gov" | "us" | "net" | "edu");
+
+# TODO: figure out fields
+website =
+    u.I["electronic { "]
+
+   (u.I[" protocol: " q]
+    b.kGraph* u.D["://"] 
+    u.I[q])?
+
+    u.I[" domain: " q]
+    (www ".")? domain_chars+ endings
+    u.I[q]
+
+   (u.D[":"]
+    u.I[" port: " q]
+    port_chars+ u.D["."]?
+    u.I[q])?
+
+   (u.D["/"]
+    u.I[" path: " q]
+    path_chars* u.D["."]?
+    u.I[q])?
+
+   (u.D["?"]
+    u.I[" query_string: " q]
+    query_string_chars* u.D["."]?
+    u.I[q])?
+
+   (u.D["#"]
+    u.I[" fragment_id: " q]
+    fragment_id_chars* u.D["."]?
+    u.I[q])?
+    
+    u.I["}"]
+;
+
+    
+    
+
+    
+
+
+
+export WEBSITE = Optimize[website];

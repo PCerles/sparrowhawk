@@ -1,0 +1,99 @@
+import '../byte.grm' as b;
+import '../util.grm' as u;
+import 'numbers.grm' as n;
+
+q = u.q;
+s = u.s;
+d = b.kDigit;
+
+insspace = u.I[" "];
+multspace = CDRewrite[" "+ : " ", "", "", b.kBytes*];
+
+# electronic { protocol: "https" domain: "www.google.com" port: "8888" path:"test/path" query_string: "test=string" fragment_id: "fragid" }
+#
+# into 
+#
+# https www dot google dot com port eight eight eight eight path test slash path query test equals string fragment i d fragid
+
+
+# TODO
+punct = (insspace ( 
+          ("." : "dot") 
+        | ("-" : "dash") 
+        | ("_" : "underscore") 
+        | ("&" : "and") 
+        | ("/" : "slash")
+        | ("?" : "question mark")
+        | ("=" : "equals")
+    ) insspace) | (b.kPunct : " " <2.0>)
+;
+
+digit_by_digit = (insspace (d @ n.CARDINAL))* insspace;
+
+words_and_single_num = digit_by_digit | b.kAlpha*;
+
+words_and_single_num_and_punct = words_and_single_num* (punct* words_and_single_num*)*;
+
+
+# TODO: figure out fields
+website = 
+    u.D["electronic" s "{" s]
+
+   (u.D["protocol:" s q]
+    words_and_single_num
+    u.D[q s]
+    u.I[" colon slash slash "])?
+
+    u.D["domain:" s q]
+    words_and_single_num_and_punct
+    u.D[q s]
+
+   (u.D["port:" s q]
+    u.I[" port "]
+    words_and_single_num_and_punct
+    u.D[q s])?
+
+   (u.D["path:" s q]
+    u.I[" path "]
+    words_and_single_num_and_punct
+    u.D[q s])?
+
+   (u.D["query_string:" s q]
+    u.I[" query "]
+    words_and_single_num_and_punct
+    u.D[q s])?
+
+   (u.D["fragment_id:" s q]
+    u.I[" fragment i d "]
+    words_and_single_num_and_punct
+    u.D[q s])?
+
+    u.D[s "}"]
+; 
+
+
+export WEBSITE = Optimize[website @ multspace];
+
+words_and_cardinal = n.CARDINAL | n.ORDINAL (u.D["st"] | u.D["rd"] | u.D["th"]) | b.kAlpha*;
+words_and_cardinal_and_punct = (words_and_cardinal punct* words_and_cardinal)*;
+
+dashes =  
+    u.D["electronic" s "{" s]
+    u.D["username:" s q]
+    words_and_cardinal_and_punct
+    u.D[q s]
+    u.I[" - "]
+    u.D["protocol:" s q]
+    words_and_cardinal_and_punct
+    u.D[q s]
+    u.D["}"]
+;
+
+ export DASH0 = dashes;
+ export DASH1 = dashes @ CDRewrite["dash" : "to", "", "", b.kBytes*];
+ export DASH2 = dashes @ CDRewrite["dash" : "minus", "", "", b.kBytes*];
+ export DASH3 = dashes @ CDRewrite["dash" : "through", "", "", b.kBytes*];
+# 
+
+
+

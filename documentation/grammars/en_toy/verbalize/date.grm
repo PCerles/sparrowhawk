@@ -22,15 +22,17 @@ two_digit =
   | ("00" : "hundred")
 ;
 
+oX = ("19" | "18" | "17" | "16" | "15" | "14" | "13" | "12" | "11" | "10");
+
 # Years are not read as cardinals, generally:
 year =
-    (("19" @ n.CARDINAL) u.I[" "] two_digit)
+    (( oX  @ n.CARDINAL) u.I[" "] two_digit)
   | (("20" @ n.CARDINAL) u.I[" "] ((D d) @ two_digit))
   | (("200" d) @ n.CARDINAL)
 ;
 
 year_plural =
-    (("19" @ n.CARDINAL) u.I[" "] pn.PLURAL_NUMBERS)
+    (( (oX - "10") @ n.CARDINAL) u.I[" "] pn.PLURAL_NUMBERS)
   | (("20" @ n.CARDINAL) u.I[" "] pn.PLURAL_NUMBERS)
   | ("2000" : "two thousands")
 ;
@@ -97,3 +99,4 @@ dmy =
 ;
 
 export DATE = Optimize[mdy | dmy | yy | yp];
+export YEAR_PLURAL = Optimize[yp];

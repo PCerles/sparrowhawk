@@ -6,12 +6,17 @@ q = u.q;
 
 # 300 -> cardinal { integer: "300"}
 
-cardinal =
+feet = d+ ("'": "f");
+inches = d+ ( "\"" : "i")?;
+
+height =
   u.I["cardinal { "]
   u.I["integer: " q]
-  d+ (u.D["'"]? "s")?
+  ((feet inches?) | (feet? inches))
   u.I[q]
   u.I[" }"]
 ;
 
-export CARDINAL = Optimize[cardinal];
+
+
+export HEIGHT = Optimize[height];
