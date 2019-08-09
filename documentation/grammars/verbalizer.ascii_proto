@@ -15,7 +15,7 @@ rules { main:"VERBATIM" }
 rules { main:"EMAIL" }
 rules { main:"WEBSITE" }
 rules { main:"MONEY" redup: "REDUP"}
-rules { main:"MONEY_COLLOQUIAL" redup: "REDUP"}
+rules { main:"MONEY_COLLOQUIAL_2" redup: "REDUP"}
 rules { main:"FRACTION_1" }
 rules { main:"FRACTION_2" }
 rules { main:"FRACTION_3" }

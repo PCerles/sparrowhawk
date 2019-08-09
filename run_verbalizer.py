@@ -14,7 +14,6 @@ def construct_verbalizer(transcript):
     norm = normalizer.Normalizer()
     norm.setup("sparrowhawk_configuration.ascii_proto", "/workspace/sparrowhawk/documentation/grammars/")
     fst_string = norm.construct_verbalizer_string(transcript)
-
     compiler = fst.Compiler()
     for line in fst_string.split('\n'): 
         print(line, file=compiler) 
@@ -23,14 +22,20 @@ def construct_verbalizer(transcript):
 
 def run(transcript):
     space_deduper = fst.Fst.read("assets/space_dedupe.fst")
-    
+    print(transcript)    
     verbalizer = construct_verbalizer(transcript)
-    verbalizer = verbalizer.project()
-    verbalizer = fst.compose(verbalizer, space_deduper).project(project_output=True).rmepsilon()
+    return
+
+#    verbalizer = verbalizer.project()
+    #verbalizer.write('/home/philip/graves_loss/hive-speech/alignment/src/test.fst')
+
+    verbalizer = fst.compose(verbalizer, space_deduper)#.project(project_output=True).rmepsilon()
+    verbalizer.write('check.fst')
     verbalizer.write('/home/philip/graves_loss/hive-speech/alignment/src/test.fst')
 
+    #verbalizer.write('out.fst')
 
-    verbalizer.write('out.fst')
+
 
     #############################
     #                           #

@@ -255,7 +255,9 @@ std::vector<string> Normalizer::SentenceSplitter(const string &input) const {
 }
 
 
-std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, MutableTransducer* res_output) {
+std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word,
+                                                                MutableTransducer* res_output,
+                                                                std::vector<std::vector<int>>* unique_paths) {
     typedef fst::StringCompiler<fst::StdArc> Compiler;
     Compiler compiler(fst::StringTokenType::BYTE);
     fst::VectorFst<fst::StdArc> transcript_lm;
@@ -379,6 +381,9 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
              fst::Minimize(&verbalization);
 
              fst::RmEpsilon(&verbalization);
+             std::vector<int> linear_string;
+             GetLinearSymbolSequence(verbalization, &linear_string);
+             unique_paths->push_back(linear_string);
 
              fst::Union(&verbalization_union, verbalization);
         }
@@ -387,6 +392,7 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
         verbalization_union.SetFinal(0, fst::StdArc::Weight::Zero());
 
         AddDifferentVerbalization(&verbalization_union, "zero", "oh");
+        AddDifferentVerbalization(&verbalization_union, "dollars", "");
 
         // Create space fst for concatenation of words
         MutableTransducer space;
@@ -429,17 +435,68 @@ bool Normalizer::CompileStringToEpsilon(string s, MutableTransducer* output) {
     *output = std::move(word);
 }
 
-std::string Normalizer::ConstructVerbalizerString(string transcript) {
+std::pair<std::string, std::vector<string>> Normalizer::ConstructVerbalizerString(string transcript) {
     MutableTransducer acceptor;
-    ConstructVerbalizer(transcript, &acceptor);
+    std::vector<std::string> vocabulary;
+    ConstructVerbalizer(transcript, &acceptor, &vocabulary);
 
     std::ostringstream outs;
     fst::script::PrintFst(acceptor, outs);
     string output_string = outs.str();
-    return output_string;
+    return std::pair<std::string, std::vector<string>>(output_string, vocabulary);
 }
 
-void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* output) {
+bool Normalizer::GetLinearSymbolSequence(const MutableTransducer &fst,
+                             std::vector<int> *isymbols_out) {
+    typedef typename fst::StdArc::StateId StateId;
+    typedef typename fst::StdArc::Weight Weight;
+
+    std::vector<int> ilabel_seq;
+    StateId cur_state = fst.Start();
+    while (1) {
+        Weight w = fst.Final(cur_state);
+        if (w != Weight::Zero()) {  // is final..
+          if (fst.NumArcs(cur_state) != 0) return false;
+          if (isymbols_out != NULL) *isymbols_out = ilabel_seq;
+          return true;
+        } else {
+          if (fst.NumArcs(cur_state) != 1) return false;
+          fst::ArcIterator<fst::StdFst> iter(fst, cur_state);  // get the only arc.
+          const fst::StdArc &arc = iter.Value();
+          if (arc.ilabel != 0) ilabel_seq.push_back(arc.ilabel);
+          cur_state = arc.nextstate;
+        }
+   }
+}
+
+void Normalizer::GetUniqueWords(const std::vector<std::vector<int>>& paths,
+                                std::vector<std::string>* out_strings) {
+    int SPACE_INDEX = 32;
+    std::set<std::string> unique_strings;
+    std::string curr_str;
+    for (int i = 0; i < paths.size(); i++) {
+        curr_str = ""; 
+        for (int j = 0; j < paths[i].size(); j++) {
+            if (paths[i][j] == SPACE_INDEX) {
+                if (curr_str != "") unique_strings.insert(curr_str); // double space
+                curr_str = "";
+            } else {
+                char c =  paths[i][j]; // sparrowhawk encodes in bytes so this goes int -> byte
+                curr_str += c;
+            }
+        }
+        if (curr_str != "") {
+            unique_strings.insert(curr_str);
+        } 
+    }
+    for (auto elem : unique_strings) {
+        out_strings->emplace_back(elem);
+    }
+}
+
+void Normalizer::ConstructVerbalizer(string transcript,
+                                     MutableTransducer* output,
+                                     std::vector<std::string>* vocabulary) {
     
     typedef fst::StringCompiler<fst::StdArc> Compiler;
     Compiler compiler(fst::StringTokenType::BYTE);
@@ -464,10 +521,12 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
     verbalizer.SetFinal(0, 0.0);
     // Construct verbalizer 
     bool has_word = false;
+
+    std::vector<std::vector<int>> paths;
     for (string word : words) {
         MutableTransducer output, word_fst;
 
-        std::vector<MutableTransducer> verbalized_strings = TokenizeAndVerbalize(word, &output);
+        std::vector<MutableTransducer> verbalized_strings = TokenizeAndVerbalize(word, &output, &paths);
 
         word_fst = verbalized_strings[0];
         for (MutableTransducer expansion : verbalized_strings) {
@@ -489,9 +548,6 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
         }
         word_fst.SetFinal(new_state_id, fst::StdArc::Weight::One());
         
-        
-
-
         MutableTransducer temp;
         fst::Determinize<fst::StdArc>(word_fst, &temp);
         word_fst = std::move(temp);
@@ -502,6 +558,7 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
         fst::Concat(&verbalizer, word_fst);
         has_word = true;
     }
+    GetUniqueWords(paths, vocabulary);
 
     MutableTransducer det;
     fst::Project(&verbalizer, fst::PROJECT_OUTPUT);
@@ -519,7 +576,7 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
     }
     verbalizer.SetFinal(new_state_id, fst::StdArc::Weight::One());
 
-    format_and_save_fst(&verbalizer, "verbalizer");
+    //format_and_save_fst(&verbalizer, "verbalizer");
     *output = std::move(verbalizer);
 }
 
