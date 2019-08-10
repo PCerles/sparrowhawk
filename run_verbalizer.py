@@ -17,13 +17,107 @@ def construct_verbalizer(transcript):
     compiler = fst.Compiler()
     for line in fst_string.split('\n'): 
         print(line, file=compiler) 
-
     return compiler.compile(), unique_vocab
 
+def make_lexicon_fst(input_words, words):
+    print(words)
+    compiler = fst.Compiler()
+    lexicon_fst = fst.Fst()
+    start = lexicon_fst.add_state()
+    lexicon_fst.set_start(start)
+
+    last = lexicon_fst.add_state()
+    lexicon_fst.add_arc(start, fst.Arc(32, 0, fst.Weight.One(lexicon_fst.weight_type()), last))
+    lexicon_fst.set_final(last)
+    for i, w in enumerate(words):
+        w = w.strip()
+        index = i + 1
+        last = lexicon_fst.add_state()
+        lexicon_fst.add_arc(start, fst.Arc(ord(w[0]), index, fst.Weight.One(lexicon_fst.weight_type()), last))
+        for c in w[1:]:
+            this = lexicon_fst.add_state()
+            lexicon_fst.add_arc(last, fst.Arc(ord(c), 0, fst.Weight.One(lexicon_fst.weight_type()), this))
+            last = this
+        lexicon_fst.set_final(last, 0)
+    lexicon_fst = fst.determinize(lexicon_fst).minimize().closure()
+
+    with open('words.syms', 'w') as f:
+        f.write('<eps> 0\n')
+        for i, w in enumerate(words + input_words): # we put word symbol here
+            f.write('{} {}'.format(w, str(i + 1)))
+            f.write('\n')
+        f.write('<SPACE> {}\n'.format(str(32)))
+
+    epsilon_fst = fst.Fst()
+    start = epsilon_fst.add_state()
+    end = epsilon_fst.add_state()
+    for i, w in enumerate(words):
+        index = i + 1
+        epsilon_fst.add_arc(start, fst.Arc(0, index, fst.Weight.One(epsilon_fst.weight_type()), end))
+
+    epsilon_fst.add_arc(start, fst.Arc(0, 32, fst.Weight.One(epsilon_fst.weight_type()), end))
+    epsilon_fst.set_final(end, 0)
+    epsilon_fst.set_start(start)
+    epsilon_fst = epsilon_fst.closure()
+
+    return lexicon_fst, epsilon_fst
+
+def get_trivial_fst(word_index):
+    trivial_word_fst = fst.Fst()
+    start = trivial_word_fst.add_state()
+    end = trivial_word_fst.add_state()
+
+    trivial_word_fst.set_start(start)
+    trivial_word_fst.set_final(end, 0)
+
+    trivial_word_fst.add_arc(start, fst.Arc(word_index, 0, fst.Weight.One(trivial_word_fst.weight_type()), end))
+    return trivial_word_fst
+
+
 def run(transcript):
+#    make_lexicon_fst(["HELLO", "GOODBYE", "HELL"])
+#    return
+    union = None
+    words = ['10', '$1.95', '$50']
     space_deduper = fst.Fst.read("assets/space_dedupe.fst")
-    verbalizer, unique_vocab = construct_verbalizer(transcript)
-    print(unique_vocab)
+
+    big_verb_fst = None
+    unique_vocab_set = set()
+
+    verbalizers = []
+    for w in words:
+        verbalizer, unique_vocab = construct_verbalizer(w)
+        for v in unique_vocab:
+            unique_vocab_set.add(v)
+        verbalizers.append(verbalizer)
+    unique_vocab_set = list(unique_vocab_set)
+    lexicon_fst, epsilon_fst = make_lexicon_fst(words, unique_vocab_set)
+
+    unique_vocab_set += words
+
+    big_verb_fst = None
+    for w, v in zip(words, verbalizers):
+        composed = fst.compose(v.project().arcsort(sort_type='olabel'), lexicon_fst).project(project_output=True)
+        composed = fst.compose(epsilon_fst, composed)
+        trivial_word_fst = get_trivial_fst(unique_vocab_set.index(w) + 1)
+        concat = fst.determinize(trivial_word_fst.concat(composed).rmepsilon().invert()).minimize()
+
+        if big_verb_fst is None:
+            big_verb_fst = concat
+        else:
+            big_verb_fst = big_verb_fst.union(concat)
+
+    big_verb_fst.write('a.fst')
+    return
+
+    concat = fst.determinize(trivial_word_fst.concat(composed).rmepsilon().invert()).minimize()
+    if union is None:
+        union = concat
+    else:
+        union = union.union(concat)
+    union.write('a.fst')
+    return
+
 
 #    verbalizer = verbalizer.project()
     #verbalizer.write('/home/philip/graves_loss/hive-speech/alignment/src/test.fst')
