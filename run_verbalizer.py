@@ -9,10 +9,10 @@ from multiprocessing import Pool
     and printing every possible verbalization of the string
 '''
 
+norm = normalizer.Normalizer()
+norm.setup("sparrowhawk_configuration.ascii_proto", "/workspace/sparrowhawk/documentation/grammars/")
 
 def construct_verbalizer(transcript):
-    norm = normalizer.Normalizer()
-    norm.setup("sparrowhawk_configuration.ascii_proto", "/workspace/sparrowhawk/documentation/grammars/")
     fst_string, unique_vocab = norm.construct_verbalizer_string(transcript)
     compiler = fst.Compiler()
     for line in fst_string.split('\n'): 
@@ -20,13 +20,14 @@ def construct_verbalizer(transcript):
     return compiler.compile(), unique_vocab
 
 def make_lexicon_fst(input_words, words):
-    print(words)
     compiler = fst.Compiler()
     lexicon_fst = fst.Fst()
     start = lexicon_fst.add_state()
     lexicon_fst.set_start(start)
 
     last = lexicon_fst.add_state()
+
+    # this line projects space to epsilon
     lexicon_fst.add_arc(start, fst.Arc(32, 0, fst.Weight.One(lexicon_fst.weight_type()), last))
     lexicon_fst.set_final(last)
     for i, w in enumerate(words):
@@ -74,31 +75,38 @@ def get_trivial_fst(word_index):
     return trivial_word_fst
 
 
-def run(transcript):
-#    make_lexicon_fst(["HELLO", "GOODBYE", "HELL"])
-#    return
-    union = None
-    words = ['10', '$1.95', '$50']
-    space_deduper = fst.Fst.read("assets/space_dedupe.fst")
+def run(words):
+    words = ['10', '$1.95', '$50', 'hello', '$40', "new", "york", "110th"]
+
+    with open('CNN_HD_2018-12-12_14-29-00.001.srt', 'r') as f:
+        words = f.read().strip().split()
 
     big_verb_fst = None
     unique_vocab_set = set()
 
     verbalizers = []
+    import time
+
+    a = time.time()
     for w in words:
         verbalizer, unique_vocab = construct_verbalizer(w)
         for v in unique_vocab:
             unique_vocab_set.add(v)
         verbalizers.append(verbalizer)
+    print(time.time() - a, 'seconds for verbalizers')
     unique_vocab_set = list(unique_vocab_set)
+
+    a = time.time()
     lexicon_fst, epsilon_fst = make_lexicon_fst(words, unique_vocab_set)
+    print(time.time() - a, 'seconds for lexicon')
 
     unique_vocab_set += words
 
     big_verb_fst = None
+    a = time.time()
     for w, v in zip(words, verbalizers):
         composed = fst.compose(v.project().arcsort(sort_type='olabel'), lexicon_fst).project(project_output=True)
-        composed = fst.compose(epsilon_fst, composed)
+        composed = fst.compose(epsilon_fst.arcsort(sort_type='olabel'), composed)
         trivial_word_fst = get_trivial_fst(unique_vocab_set.index(w) + 1)
         concat = fst.determinize(trivial_word_fst.concat(composed).rmepsilon().invert()).minimize()
 
@@ -106,6 +114,7 @@ def run(transcript):
             big_verb_fst = concat
         else:
             big_verb_fst = big_verb_fst.union(concat)
+    print(time.time() - a, 'seconds for compositions')
 
     big_verb_fst.write('a.fst')
     return
