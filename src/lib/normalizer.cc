@@ -536,7 +536,7 @@ void Normalizer::ConstructVerbalizer(string transcript,
         fst::Minimize(&word_fst);
 
         if (has_word) fst::Concat(&verbalizer, space);
-        fst::Concat(verbalizer, &word_fst);
+        fst::Concat(&verbalizer, word_fst);
         has_word = true;
     }
     GetUniqueWords(paths, vocabulary);
