@@ -407,13 +407,9 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word,
         fst::Concat(&concatenated_output, verbalization_union);
       }
 
-   
-
       verbalized.push_back(concatenated_output);
-      //LoggerDebug("Verbalize output: Words\n%s\n\n", LinearizeWords(&utt).c_str());
     }
-
-        return verbalized;
+    return verbalized;
 }
 
 
@@ -426,9 +422,7 @@ bool Normalizer::CompileStringToEpsilon(string s, MutableTransducer* output) {
         ++index;
     }
     word.AddState();
-
     word.SetStart(0);
-
     word.SetFinal(s.length(), 0.0);
 
     *output = std::move(word);
@@ -599,73 +593,6 @@ std::vector<fst::StdArc::StateId> Normalizer::FindPath(char const * s, MutableTr
 
     return paths;
 }
-
-//    // Rewrite dashes
-//    MutableTransducer dash_rewrite;
-//    dash_rewrite.AddState();
-//    dash_rewrite.AddState();
-//    dash_rewrite.AddArc(0, fst::StdArc('-', 0, 0.0, 1));
-//    dash_rewrite.SetStart(0);
-//    dash_rewrite.SetFinal(1, 0.0);
-//
-//    MutableTransducer dash_rewrite_suffix;
-//    std::vector<string> expansions { " to ", " minus ", " through " };
-//    for (string exp : expansions) {
-//        MutableTransducer string_fst;
-//        CompileStringToEpsilon(exp, &string_fst);       
-//        fst::Invert(&string_fst);
-//        fst::Union(&dash_rewrite_suffix, string_fst);
-//        break;
-//    }
-//
-//    fst::Concat(&dash_rewrite, dash_rewrite_suffix);
-//    
-//    // Merge final state       
-//    new_state_id = dash_rewrite.AddState();
-//    for (fst::StateIterator<fst::StdFst> siter(dash_rewrite); !siter.Done(); siter.Next())  {
-//        fst::StdArc::StateId state_id = siter.Value();
-//        fst::StdArc::Weight weight = dash_rewrite.Final(state_id);
-//        if (weight != fst::StdArc::Weight::Zero()) {
-//           dash_rewrite.SetFinal(state_id, fst::StdArc::Weight::Zero());
-//           dash_rewrite.AddArc(state_id, fst::StdArc(0,0,0.0,new_state_id));
-//        }
-//    }
-//    dash_rewrite.SetFinal(new_state_id, fst::StdArc::Weight::One());
-//    fst::Minimize(&dash_rewrite);
-//    fst::RmEpsilon(&dash_rewrite);
-//
-//    ArcSort(&dash_rewrite, fst::ILabelCompare<fst::StdArc>());
-//
-//    Closure(&dash_rewrite, fst::CLOSURE_PLUS);
-//
-//    format_and_save_fst(&dash_rewrite, "dash_rewrite", "/tts/images2/");
-//    
-//    MutableTransducer t;
-//
-//    t.AddState();
-//    t.AddState();
-//    t.AddState();
-//    t.AddArc(0, fst::StdArc('a', 'a', 0.0, 1));
-//    t.AddArc(1, fst::StdArc('-', '-', 0.0, 2));
-//    t.SetStart(0);
-//    t.SetFinal(2, 0.0);
-//
-//
-//    std::vector<MutableTransducer> app;
-//    if (!verbalizer_rules_->ApplyRules(verbalizer,
-//                                     &app,
-//                                     false /* use_lookahead */)) {
-//    LoggerError("Failed to verbalize dashes");
-//    return ;
-//}
-    //fst::ShortestPath(verbalizer, &t);
-//    int abc = 0;
-//    for (auto ko : app) {
-//    format_and_save_fst(&ko, "t234567" + abc++, "/tts/images2/");
-//    }
-//    fst::Compose<fst::StdArc>(t, dash_rewrite, output);
-
-///}
 
 void Normalizer::format_and_save_fst(MutableTransducer * fst, char const * name, char const * IMAGE_DIR) const {
     char buf[100];

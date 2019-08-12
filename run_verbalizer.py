@@ -81,11 +81,10 @@ def get_trivial_fst(word_index):
 def run(words):
 
     construct_verbalizer('here is a check for $40 and $5.95 and 10 puppy')
-    return
     words = ['10', '$1.95', '$50', 'hello', '$40', "new", "york", "110th"]
 
-#    with open('CNN_HD_2018-12-12_14-29-00.001.srt', 'r') as f:
-#        words = f.read().strip().split()
+    with open('CNN_HD_2018-12-12_14-29-00.001.srt', 'r') as f:
+        words = f.read().strip().split()
 
     big_verb_fst = None
     unique_vocab_set = set()
