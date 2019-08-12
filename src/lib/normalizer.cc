@@ -535,18 +535,6 @@ void Normalizer::ConstructVerbalizer(string transcript,
         fst::Project(&word_fst, fst::PROJECT_OUTPUT);
         fst::RmEpsilon(&word_fst);
       
-        // Merge final states
-        fst::StdArc::StateId new_state_id = word_fst.AddState();
-        for (fst::StateIterator<fst::StdFst> siter(word_fst); !siter.Done(); siter.Next())  {
-            fst::StdArc::StateId state_id = siter.Value();
-            fst::StdArc::Weight weight = word_fst.Final(state_id);
-            if (weight != fst::StdArc::Weight::Zero()) {
-               word_fst.SetFinal(state_id, fst::StdArc::Weight::Zero());
-               word_fst.AddArc(state_id, fst::StdArc(0,0,0.0,new_state_id));
-            }
-        }
-        word_fst.SetFinal(new_state_id, fst::StdArc::Weight::One());
-        
         MutableTransducer temp;
         fst::Determinize<fst::StdArc>(word_fst, &temp);
         word_fst = std::move(temp);
@@ -554,7 +542,7 @@ void Normalizer::ConstructVerbalizer(string transcript,
         fst::Minimize(&word_fst);
 
         if (has_word) fst::Concat(&verbalizer, space);
-        fst::Concat(&verbalizer, word_fst);
+        fst::Concat(verbalizer, &word_fst);
         has_word = true;
     }
     GetUniqueWords(paths, vocabulary);
@@ -563,19 +551,6 @@ void Normalizer::ConstructVerbalizer(string transcript,
     fst::Project(&verbalizer, fst::PROJECT_OUTPUT);
     fst::RmEpsilon(&verbalizer);
 
-    // Merge final state       
-    fst::StdArc::StateId new_state_id = verbalizer.AddState();
-    for (fst::StateIterator<fst::StdFst> siter(verbalizer); !siter.Done(); siter.Next())  {
-        fst::StdArc::StateId state_id = siter.Value();
-        fst::StdArc::Weight weight = verbalizer.Final(state_id);
-        if (weight != fst::StdArc::Weight::Zero()) {
-           verbalizer.SetFinal(state_id, fst::StdArc::Weight::Zero());
-           verbalizer.AddArc(state_id, fst::StdArc(0,0,0.0,new_state_id));
-        }
-    }
-    verbalizer.SetFinal(new_state_id, fst::StdArc::Weight::One());
-
-    //format_and_save_fst(&verbalizer, "verbalizer");
     *output = std::move(verbalizer);
 }
 

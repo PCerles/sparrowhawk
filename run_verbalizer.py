@@ -1,6 +1,9 @@
+import time
+import re
+import sys
+
 import normalizer
 import pywrapfst as fst
-import sys
 from functools import reduce
 from multiprocessing import Pool
 
@@ -8,16 +11,16 @@ from multiprocessing import Pool
 ''' Script for running an arbitrary string through the tokenizer + verbalizer 
     and printing every possible verbalization of the string
 '''
-
-norm = normalizer.Normalizer()
-norm.setup("sparrowhawk_configuration.ascii_proto", "/workspace/sparrowhawk/documentation/grammars/")
-
 def construct_verbalizer(transcript):
     fst_string, unique_vocab = norm.construct_verbalizer_string(transcript)
+
     compiler = fst.Compiler()
     for line in fst_string.split('\n'): 
         print(line, file=compiler) 
-    return compiler.compile(), unique_vocab
+    compiled = compiler.compile()
+    compiled.write('a.fst')
+    return compiled, unique_vocab
+
 
 def make_lexicon_fst(input_words, words):
     compiler = fst.Compiler()
@@ -76,16 +79,18 @@ def get_trivial_fst(word_index):
 
 
 def run(words):
+
+    construct_verbalizer('here is a check for $40 and $5.95 and 10 puppy')
+    return
     words = ['10', '$1.95', '$50', 'hello', '$40', "new", "york", "110th"]
 
-    with open('CNN_HD_2018-12-12_14-29-00.001.srt', 'r') as f:
-        words = f.read().strip().split()
+#    with open('CNN_HD_2018-12-12_14-29-00.001.srt', 'r') as f:
+#        words = f.read().strip().split()
 
     big_verb_fst = None
     unique_vocab_set = set()
 
     verbalizers = []
-    import time
 
     a = time.time()
     for w in words:
@@ -114,19 +119,12 @@ def run(words):
             big_verb_fst = concat
         else:
             big_verb_fst = big_verb_fst.union(concat)
+    big_verb_fst = big_verb_fst.rmepsilon()
     print(time.time() - a, 'seconds for compositions')
+
 
     big_verb_fst.write('a.fst')
     return
-
-    concat = fst.determinize(trivial_word_fst.concat(composed).rmepsilon().invert()).minimize()
-    if union is None:
-        union = concat
-    else:
-        union = union.union(concat)
-    union.write('a.fst')
-    return
-
 
 #    verbalizer = verbalizer.project()
     #verbalizer.write('/home/philip/graves_loss/hive-speech/alignment/src/test.fst')
@@ -138,12 +136,14 @@ def run(words):
     #verbalizer.write('out.fst')
 
 
-
+def print_expansion(verbalizer):
+    """has bugs
     #############################
     #                           #
     #     Print expansions      #
     #                           #
     ############################$
+    """
 
     # Allocate graph
     NODES   = [dict() for _ in range(verbalizer.num_states())]
@@ -192,6 +192,10 @@ def run(words):
 
     print('{}\n{}\n\n'.format(transcript, out_string))
 
-with open(sys.argv[1], 'r') as f:
-    to_run = f.read()
-run(to_run)
+if __name__ == '__main__':
+    norm = normalizer.Normalizer()
+    norm.setup("sparrowhawk_configuration.ascii_proto", "/workspace/sparrowhawk/documentation/grammars/")
+
+    with open(sys.argv[1], 'r') as f:
+        to_run = f.read()
+    run(to_run)
