@@ -255,7 +255,9 @@ std::vector<string> Normalizer::SentenceSplitter(const string &input) const {
 }
 
 
-std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, MutableTransducer* res_output) {
+std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word,
+                                                                MutableTransducer* res_output,
+                                                                std::vector<std::vector<int>>* unique_paths) {
     typedef fst::StringCompiler<fst::StdArc> Compiler;
     Compiler compiler(fst::StringTokenType::BYTE);
     fst::VectorFst<fst::StdArc> transcript_lm;
@@ -379,6 +381,9 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
              fst::Minimize(&verbalization);
 
              fst::RmEpsilon(&verbalization);
+             std::vector<int> linear_string;
+             GetLinearSymbolSequence(verbalization, &linear_string);
+             unique_paths->push_back(linear_string);
 
              fst::Union(&verbalization_union, verbalization);
         }
@@ -402,13 +407,9 @@ std::vector<MutableTransducer> Normalizer::TokenizeAndVerbalize(string word, Mut
         fst::Concat(&concatenated_output, verbalization_union);
       }
 
-   
-
       verbalized.push_back(concatenated_output);
-      //LoggerDebug("Verbalize output: Words\n%s\n\n", LinearizeWords(&utt).c_str());
     }
-
-        return verbalized;
+    return verbalized;
 }
 
 
@@ -421,25 +422,74 @@ bool Normalizer::CompileStringToEpsilon(string s, MutableTransducer* output) {
         ++index;
     }
     word.AddState();
-
     word.SetStart(0);
-
     word.SetFinal(s.length(), 0.0);
 
     *output = std::move(word);
 }
 
-std::string Normalizer::ConstructVerbalizerString(string transcript) {
+std::pair<std::string, std::vector<string>> Normalizer::ConstructVerbalizerString(string transcript) {
     MutableTransducer acceptor;
-    ConstructVerbalizer(transcript, &acceptor);
+    std::vector<std::string> vocabulary;
+    ConstructVerbalizer(transcript, &acceptor, &vocabulary);
 
     std::ostringstream outs;
     fst::script::PrintFst(acceptor, outs);
     string output_string = outs.str();
-    return output_string;
+    return std::pair<std::string, std::vector<string>>(output_string, vocabulary);
 }
 
-void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* output) {
+bool Normalizer::GetLinearSymbolSequence(const MutableTransducer &fst,
+                             std::vector<int> *isymbols_out) {
+    typedef typename fst::StdArc::StateId StateId;
+    typedef typename fst::StdArc::Weight Weight;
+
+    std::vector<int> ilabel_seq;
+    StateId cur_state = fst.Start();
+    while (1) {
+        Weight w = fst.Final(cur_state);
+        if (w != Weight::Zero()) {  // is final..
+          if (fst.NumArcs(cur_state) != 0) return false;
+          if (isymbols_out != NULL) *isymbols_out = ilabel_seq;
+          return true;
+        } else {
+          if (fst.NumArcs(cur_state) != 1) return false;
+          fst::ArcIterator<fst::StdFst> iter(fst, cur_state);  // get the only arc.
+          const fst::StdArc &arc = iter.Value();
+          if (arc.ilabel != 0) ilabel_seq.push_back(arc.ilabel);
+          cur_state = arc.nextstate;
+        }
+   }
+}
+
+void Normalizer::GetUniqueWords(const std::vector<std::vector<int>>& paths,
+                                std::vector<std::string>* out_strings) {
+    int SPACE_INDEX = 32;
+    std::set<std::string> unique_strings;
+    std::string curr_str;
+    for (int i = 0; i < paths.size(); i++) {
+        curr_str = ""; 
+        for (int j = 0; j < paths[i].size(); j++) {
+            if (paths[i][j] == SPACE_INDEX) {
+                if (curr_str != "") unique_strings.insert(curr_str); // double space
+                curr_str = "";
+            } else {
+                char c =  paths[i][j]; // sparrowhawk encodes in bytes so this goes int -> byte
+                curr_str += c;
+            }
+        }
+        if (curr_str != "") {
+            unique_strings.insert(curr_str);
+        } 
+    }
+    for (auto elem : unique_strings) {
+        out_strings->emplace_back(elem);
+    }
+}
+
+void Normalizer::ConstructVerbalizer(string transcript,
+                                     MutableTransducer* output,
+                                     std::vector<std::string>* vocabulary) {
     
     typedef fst::StringCompiler<fst::StdArc> Compiler;
     Compiler compiler(fst::StringTokenType::BYTE);
@@ -464,10 +514,12 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
     verbalizer.SetFinal(0, 0.0);
     // Construct verbalizer 
     bool has_word = false;
+
+    std::vector<std::vector<int>> paths;
     for (string word : words) {
         MutableTransducer output, word_fst;
 
-        std::vector<MutableTransducer> verbalized_strings = TokenizeAndVerbalize(word, &output);
+        std::vector<MutableTransducer> verbalized_strings = TokenizeAndVerbalize(word, &output, &paths);
 
         word_fst = verbalized_strings[0];
         for (MutableTransducer expansion : verbalized_strings) {
@@ -477,21 +529,6 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
         fst::Project(&word_fst, fst::PROJECT_OUTPUT);
         fst::RmEpsilon(&word_fst);
       
-        // Merge final states
-        fst::StdArc::StateId new_state_id = word_fst.AddState();
-        for (fst::StateIterator<fst::StdFst> siter(word_fst); !siter.Done(); siter.Next())  {
-            fst::StdArc::StateId state_id = siter.Value();
-            fst::StdArc::Weight weight = word_fst.Final(state_id);
-            if (weight != fst::StdArc::Weight::Zero()) {
-               word_fst.SetFinal(state_id, fst::StdArc::Weight::Zero());
-               word_fst.AddArc(state_id, fst::StdArc(0,0,0.0,new_state_id));
-            }
-        }
-        word_fst.SetFinal(new_state_id, fst::StdArc::Weight::One());
-        
-        
-
-
         MutableTransducer temp;
         fst::Determinize<fst::StdArc>(word_fst, &temp);
         word_fst = std::move(temp);
@@ -502,24 +539,12 @@ void Normalizer::ConstructVerbalizer(string transcript, MutableTransducer* outpu
         fst::Concat(&verbalizer, word_fst);
         has_word = true;
     }
+    GetUniqueWords(paths, vocabulary);
 
     MutableTransducer det;
     fst::Project(&verbalizer, fst::PROJECT_OUTPUT);
     fst::RmEpsilon(&verbalizer);
 
-    // Merge final state       
-    fst::StdArc::StateId new_state_id = verbalizer.AddState();
-    for (fst::StateIterator<fst::StdFst> siter(verbalizer); !siter.Done(); siter.Next())  {
-        fst::StdArc::StateId state_id = siter.Value();
-        fst::StdArc::Weight weight = verbalizer.Final(state_id);
-        if (weight != fst::StdArc::Weight::Zero()) {
-           verbalizer.SetFinal(state_id, fst::StdArc::Weight::Zero());
-           verbalizer.AddArc(state_id, fst::StdArc(0,0,0.0,new_state_id));
-        }
-    }
-    verbalizer.SetFinal(new_state_id, fst::StdArc::Weight::One());
-
-    format_and_save_fst(&verbalizer, "verbalizer");
     *output = std::move(verbalizer);
 }
 
@@ -568,73 +593,6 @@ std::vector<fst::StdArc::StateId> Normalizer::FindPath(char const * s, MutableTr
 
     return paths;
 }
-
-//    // Rewrite dashes
-//    MutableTransducer dash_rewrite;
-//    dash_rewrite.AddState();
-//    dash_rewrite.AddState();
-//    dash_rewrite.AddArc(0, fst::StdArc('-', 0, 0.0, 1));
-//    dash_rewrite.SetStart(0);
-//    dash_rewrite.SetFinal(1, 0.0);
-//
-//    MutableTransducer dash_rewrite_suffix;
-//    std::vector<string> expansions { " to ", " minus ", " through " };
-//    for (string exp : expansions) {
-//        MutableTransducer string_fst;
-//        CompileStringToEpsilon(exp, &string_fst);       
-//        fst::Invert(&string_fst);
-//        fst::Union(&dash_rewrite_suffix, string_fst);
-//        break;
-//    }
-//
-//    fst::Concat(&dash_rewrite, dash_rewrite_suffix);
-//    
-//    // Merge final state       
-//    new_state_id = dash_rewrite.AddState();
-//    for (fst::StateIterator<fst::StdFst> siter(dash_rewrite); !siter.Done(); siter.Next())  {
-//        fst::StdArc::StateId state_id = siter.Value();
-//        fst::StdArc::Weight weight = dash_rewrite.Final(state_id);
-//        if (weight != fst::StdArc::Weight::Zero()) {
-//           dash_rewrite.SetFinal(state_id, fst::StdArc::Weight::Zero());
-//           dash_rewrite.AddArc(state_id, fst::StdArc(0,0,0.0,new_state_id));
-//        }
-//    }
-//    dash_rewrite.SetFinal(new_state_id, fst::StdArc::Weight::One());
-//    fst::Minimize(&dash_rewrite);
-//    fst::RmEpsilon(&dash_rewrite);
-//
-//    ArcSort(&dash_rewrite, fst::ILabelCompare<fst::StdArc>());
-//
-//    Closure(&dash_rewrite, fst::CLOSURE_PLUS);
-//
-//    format_and_save_fst(&dash_rewrite, "dash_rewrite", "/tts/images2/");
-//    
-//    MutableTransducer t;
-//
-//    t.AddState();
-//    t.AddState();
-//    t.AddState();
-//    t.AddArc(0, fst::StdArc('a', 'a', 0.0, 1));
-//    t.AddArc(1, fst::StdArc('-', '-', 0.0, 2));
-//    t.SetStart(0);
-//    t.SetFinal(2, 0.0);
-//
-//
-//    std::vector<MutableTransducer> app;
-//    if (!verbalizer_rules_->ApplyRules(verbalizer,
-//                                     &app,
-//                                     false /* use_lookahead */)) {
-//    LoggerError("Failed to verbalize dashes");
-//    return ;
-//}
-    //fst::ShortestPath(verbalizer, &t);
-//    int abc = 0;
-//    for (auto ko : app) {
-//    format_and_save_fst(&ko, "t234567" + abc++, "/tts/images2/");
-//    }
-//    fst::Compose<fst::StdArc>(t, dash_rewrite, output);
-
-///}
 
 void Normalizer::format_and_save_fst(MutableTransducer * fst, char const * name, char const * IMAGE_DIR) const {
     char buf[100];

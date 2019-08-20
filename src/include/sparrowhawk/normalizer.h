@@ -79,10 +79,12 @@ class Normalizer {
   // normalize each of the resulting sentences.
   std::vector<string> SentenceSplitter(const string &input) const;
 
-  std::vector<MutableTransducer> TokenizeAndVerbalize(string word, MutableTransducer* output);
+  std::vector<MutableTransducer> TokenizeAndVerbalize(string word, MutableTransducer* output, std::vector<std::vector<int>>* unique_paths);
 
-  void ConstructVerbalizer(string transcript, MutableTransducer * output);
-  std::string ConstructVerbalizerString(string transcript);
+  void ConstructVerbalizer(string transcript, MutableTransducer * output,
+                                     std::vector<std::string>* vocabulary);
+
+  std::pair<std::string, std::vector<string>> ConstructVerbalizerString(string transcript);
 
   void format_and_save_fst(MutableTransducer * fst, char const * name, char const * IMAGE_DIR = "/tts/images/") const;
 
@@ -150,6 +152,12 @@ class Normalizer {
   std::vector<fst::StdArc::StateId> FindPath(char const * s, MutableTransducer * fst, fst::StdArc::StateId state) const;
 
   void AddDifferentVerbalization(MutableTransducer* fst, char const* orig_verb, char * new_verb) const;
+
+  bool GetLinearSymbolSequence(const MutableTransducer &fst, std::vector<int> *isymbols_out);
+
+  void GetUniqueWords(const std::vector<std::vector<int>>& paths,
+                                std::vector<std::string>* out_strings);
+
 
 
   string input_;

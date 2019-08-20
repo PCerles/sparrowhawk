@@ -216,13 +216,18 @@ money_all_col =
   u.D[s "}"]
 ;
 
-colloquialize = CDRewrite[(" dollars and " | "dollar and ") : " ", "", "", b.kBytes*] @ CDRewrite[(" cents" | " cent") : " ", "", "", b.kBytes*];
+colloquialize = CDRewrite[(" dollars and " | "dollar and ") : "", "", "", b.kBytes*] @ CDRewrite[(" cents" | " cent") : " ", "", "", b.kBytes*];
+colloquialize_2 = CDRewrite[(" dollars and " | "dollar and ") : " dollar ", "", "", b.kBytes*] 
+                  @ CDRewrite[(" cents" | " cent") : "", "", "", b.kBytes*]
+                  @ CDRewrite["one " : "a ", "", "", b.kBytes*];
 
 export MONEY_COLLOQUIAL =
-   Optimize[
-    (money_all_col
-     @ singularize ) @ colloquialize]
+   Optimize[money_all_col @ colloquialize]
 ;
+export MONEY_COLLOQUIAL_2 =
+   Optimize[money_all_col @ colloquialize_2]
+;
+
 
 # keep one space
 ks = s : " ";

@@ -91,10 +91,10 @@ int main(int argc, char** argv) {
   string in;// = "$10.01 abc 123 Jan. 1 2007";// test www.google.com";
 
   int num = 0;
-  while (std::getline(std::cin, in))      {
-      normalizer->ConstructVerbalizer(in, &fst, &syms);
-      normalizer->format_and_save_fst(&fst, std::to_string(num++).c_str());
-  }
+//  while (std::getline(std::cin, in))      {
+//      normalizer->ConstructVerbalizer(in, &fst);
+//      normalizer->format_and_save_fst(&fst, std::to_string(num++).c_str());
+//  }
 
 
   return 0;

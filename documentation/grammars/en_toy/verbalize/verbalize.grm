@@ -19,6 +19,7 @@ export YEAR_PLURAL                      =  d.YEAR_PLURAL ;
 export MEASURE                          =  M.MEASURE ;
 export MONEY                            =  m.MONEY ;
 export MONEY_COLLOQUIAL                 =  m.MONEY_COLLOQUIAL;
+export MONEY_COLLOQUIAL_2               =  m.MONEY_COLLOQUIAL_2;
 export CARDINAL_MARKUP                  =  n.CARDINAL_MARKUP ;
 export CARDINAL_PLURAL_MARKUP           =  n.CARDINAL_PLURAL_MARKUP ;
 export CARDINAL_TRIPLE_DIGIT_COLLOQUIAL =  n.CARDINAL_TRIPLE_DIGIT_COLLOQUIAL ;

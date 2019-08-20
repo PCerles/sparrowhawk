@@ -12,7 +12,10 @@ dash_expansion =
   (b.kBytes - "-")*
   u.D["-"]
   u.I[q " protocol: " q]
-  (b.kBytes - "-")* (u.D["."])?
+  (b.kBytes - "-")*
+  (u.D["-"]
+  u.I[q " protocol: " q]
+  (b.kBytes - "-")*)*
   u.I[q]
   u.I[" }"];
 

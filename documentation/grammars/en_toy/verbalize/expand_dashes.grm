@@ -32,6 +32,10 @@ _dash_markup =
     u.I[" - "]
     u.D["protocol:" s q]
     words_and_cardinal_and_ordinal
+    (u.D[q s]
+    u.I[" - "]
+    u.D["protocol:" s q]
+    words_and_cardinal_and_ordinal)*
     u.D[q s]
     u.D["}"]
 ;
